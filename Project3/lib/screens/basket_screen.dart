@@ -120,6 +120,40 @@ class BasketScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Clear Cart?'),
+                              content: const Text('This will remove all items from your basket.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    app.clearBasket(); 
+                                    Navigator.pop(ctx); 
+                                  },
+                                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                                  child: const Text('Clear All'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red, 
+                        ),
+                        child: const Text('Clear Cart'),
+                      ),
+                    ),
                   ],
                 ),
               ),

@@ -398,4 +398,23 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearBasket() {
+    if (_uid == null) return;
+
+    for (final item in basket) {
+      final cat = _canon(item['category'] as String);
+      final qty = item['qty'] as int;
+
+      if (balances.containsKey(cat)) {
+        final currentUsed = (balances[cat]!['used'] ?? 0) as int;
+        balances[cat]!['used'] = (currentUsed - qty).clamp(0, 999);
+      }
+    }
+
+    basket.clear();
+
+    _persist();
+    notifyListeners();
+  }
+
 }
