@@ -5,6 +5,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import '../state/app_state.dart';
 import '../services/apl_service.dart';
+import '../widgets/nutritional_badges.dart';
+import '../utils/nutritional_utils.dart';
 
 /// Barcode scanning screen for WIC eligibility checking.
 ///
@@ -302,7 +304,14 @@ class _ScanScreenState extends State<ScanScreen> {
                                   color: Color(0xFFD1001C),
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 8),
+                              NutritionalBadgesCompact(
+                                nutrition:
+                                    NutritionalUtils.generateMockNutrition(
+                                      _lastInfo!['category'] ?? 'Unknown',
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
                               Text(
                                 'Category: ${_lastInfo!['category']}',
                                 style: TextStyle(color: Colors.grey.shade700),
@@ -491,7 +500,14 @@ class _ScanScreenState extends State<ScanScreen> {
                                       color: Color(0xFFD1001C),
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 12),
+                                  NutritionalBadgesCompact(
+                                    nutrition:
+                                        NutritionalUtils.generateMockNutrition(
+                                          _lastInfo!['category'] ?? 'Unknown',
+                                        ),
+                                  ),
+                                  const SizedBox(height: 12),
                                   Text(
                                     'Category: ${_lastInfo!['category']}',
                                     style: TextStyle(

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../state/app_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/nutritional_badges.dart';
+import '../utils/nutritional_utils.dart';
 
 /// Screen displaying the user's current shopping basket with item management.
 ///
@@ -157,57 +159,206 @@ class BasketScreen extends StatelessWidget {
 /// Provides increment/decrement buttons that call [AppState.incrementItem]
 /// and [AppState.decrementItem] respectively. Buttons are styled with
 /// visual feedback and disabled states based on category limits.
-class _BasketItem extends StatelessWidget {
+class _BasketItem extends StatefulWidget {
   const _BasketItem({required this.item});
 
   /// The basket item data map containing 'upc', 'name', 'category', and 'qty'.
   final Map<String, dynamic> item;
 
   @override
+  State<_BasketItem> createState() => _BasketItemState();
+}
+
+class _BasketItemState extends State<_BasketItem> {
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
-    final upc = item['upc'] as String? ?? '';
-    final name = item['name'] as String? ?? 'Unknown';
-    final category = item['category'] as String? ?? 'Unknown';
-    final qty = item['qty'] as int? ?? 0;
+    final upc = widget.item['upc'] as String? ?? '';
+    final name = widget.item['name'] as String? ?? 'Unknown';
+    final category = widget.item['category'] as String? ?? 'Unknown';
+    final qty = widget.item['qty'] as int? ?? 0;
     final canAdd = appState.canAdd(category);
+
+    // Generate nutritional data if not present
+    final nutrition =
+        widget.item['nutrition'] as Map<String, dynamic>? ??
+        NutritionalUtils.generateMockNutrition(category);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: const Color(0xFFD1001C).withValues(alpha: 0.1),
-          child: Text(
-            qty.toString(),
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFFD1001C),
+      child: Column(
+        children: [
+          ListTile(
+            leading: CircleAvatar(
+              backgroundColor: const Color(0xFFD1001C).withValues(alpha: 0.1),
+              child: Text(
+                qty.toString(),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFD1001C),
+                ),
+              ),
+            ),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
+                const SizedBox(height: 4),
+                NutritionalBadgesCompact(nutrition: nutrition),
+              ],
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                category,
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Decrement button
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  color: const Color(0xFFD1001C),
+                  onPressed: () => appState.decrementItem(upc),
+                  tooltip: 'Remove one',
+                ),
+                // Increment button
+                IconButton(
+                  icon: Icon(
+                    Icons.add_circle_outline,
+                    color: canAdd
+                        ? const Color(0xFFD1001C)
+                        : Colors.grey.shade300,
+                  ),
+                  onPressed: canAdd ? () => appState.incrementItem(upc) : null,
+                  tooltip: canAdd ? 'Add one' : 'Category limit reached',
+                ),
+              ],
             ),
           ),
-        ),
-        title: Text(name, style: const TextStyle(fontWeight: FontWeight.w500)),
-        subtitle: Text(category, style: TextStyle(color: Colors.grey.shade600)),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Decrement button
-            IconButton(
-              icon: const Icon(Icons.remove_circle_outline),
-              color: const Color(0xFFD1001C),
-              onPressed: () => appState.decrementItem(upc),
-              tooltip: 'Remove one',
-            ),
-            // Increment button
-            IconButton(
-              icon: Icon(
-                Icons.add_circle_outline,
-                color: canAdd ? const Color(0xFFD1001C) : Colors.grey.shade300,
+          // Expandable nutritional info section
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    _expanded ? Icons.expand_less : Icons.expand_more,
+                    size: 20,
+                    color: const Color(0xFFD1001C),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _expanded
+                        ? 'Hide Nutritional Info'
+                        : 'Show Nutritional Info',
+                    style: const TextStyle(
+                      color: Color(0xFFD1001C),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
               ),
-              onPressed: canAdd ? () => appState.incrementItem(upc) : null,
-              tooltip: canAdd ? 'Add one' : 'Category limit reached',
             ),
-          ],
-        ),
+          ),
+          if (_expanded)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                border: Border(top: BorderSide(color: Colors.grey.shade200)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Nutrition Facts',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const Divider(height: 16),
+                  _NutritionRow(
+                    label: 'Calories',
+                    value: '${nutrition['calories']} cal',
+                    bold: true,
+                  ),
+                  const SizedBox(height: 8),
+                  _NutritionRow(
+                    label: 'Total Fat',
+                    value: '${nutrition['totalFat']}g',
+                  ),
+                  _NutritionRow(
+                    label: '  Saturated Fat',
+                    value: '${nutrition['saturatedFat']}g',
+                    indent: true,
+                  ),
+                  const SizedBox(height: 8),
+                  _NutritionRow(
+                    label: 'Sodium',
+                    value: '${nutrition['sodium']}mg',
+                  ),
+                  const SizedBox(height: 8),
+                  _NutritionRow(
+                    label: 'Total Sugars',
+                    value: '${nutrition['sugar']}g',
+                  ),
+                  const SizedBox(height: 8),
+                  _NutritionRow(
+                    label: 'Protein',
+                    value: '${nutrition['protein']}g',
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Helper widget to display a nutrition fact row
+class _NutritionRow extends StatelessWidget {
+  const _NutritionRow({
+    required this.label,
+    required this.value,
+    this.bold = false,
+    this.indent = false,
+  });
+
+  final String label;
+  final String value;
+  final bool bold;
+  final bool indent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: indent ? 4 : 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: indent ? 13 : 14,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+              color: indent ? Colors.grey.shade700 : Colors.black,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
       ),
     );
   }

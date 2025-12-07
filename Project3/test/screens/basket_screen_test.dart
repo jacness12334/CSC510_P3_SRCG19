@@ -22,6 +22,7 @@ class TestAppState extends AppState {
     required String upc,
     required String name,
     required String category,
+    Map<String, dynamic>? nutrition,
   }) {
     final cat = category.trim().replaceAll(RegExp(r'\s+'), ' ').toUpperCase();
     // Ensure category exists/capped like real code
