@@ -388,4 +388,14 @@ class AppState extends ChangeNotifier {
     _persist();
     notifyListeners();
   }
+
+  Future<void> checkout() async {
+    if (_uid == null) return;
+
+    basket.clear();
+
+    await _persist();
+    notifyListeners();
+  }
+
 }

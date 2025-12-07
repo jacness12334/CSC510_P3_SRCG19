@@ -48,67 +48,85 @@ class BasketScreen extends StatelessWidget {
         ],
       ),
       body: basket.isEmpty
-          ? _buildEmptyState(context)
-          : Column(
-              children: [
-                // Total items header
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD1001C).withValues(alpha: 0.1),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: const Color(0xFFD1001C).withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                    ),
+      ? _buildEmptyState(context)
+      : Column(
+          children: [
+            // 1. Existing List of item 
+            Expanded(
+              child: ListView.builder(
+                itemCount: basket.length,
+                itemBuilder: (context, index) {
+                  final item = basket[index];
+                  return _BasketItem(item: item);
+                },
+              ),
+            ),
+
+            // 2. NEW: Checkout Footer
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total Items:',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFD1001C),
+                ],
+              ),
+              child: SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total Items:',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD1001C),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
+                        Text(
                           '$totalItems',
                           style: const TextStyle(
-                            fontSize: 18,
+                            fontSize: 24, 
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Color(0xFFD1001C),
                           ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: FilledButton(
+                        onPressed: () async {
+                          await app.checkout();
+                          
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Checkout Complete! Balances updated.'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                            context.go('/scan');
+                          }
+                        },
+                        child: const Text(
+                          'Checkout', 
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                // Basket items list
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: basket.length,
-                    itemBuilder: (context, index) {
-                      final item = basket[index];
-                      return _BasketItem(item: item);
-                    },
-                  ),
-                ),
-              ],
+              ),
             ),
-    );
+          ],
+        ),
+);
   }
 
   /// Builds the UI shown when the basket is empty.
