@@ -185,6 +185,27 @@ class AppState extends ChangeNotifier {
     return true; // uncapped
   }
 
+
+  /// Checks if the last update was in a previous month/year compared to now.
+  bool _isNewMonth(Timestamp? lastUpdate) {
+    if (lastUpdate == null) return false; // No history, assume fresh
+    final last = lastUpdate.toDate();
+    final now = DateTime.now();
+    return last.month != now.month || last.year != now.year;
+  }
+
+  /// Resets all "used" counts to 0 and clears the basket.
+  void _resetMonthlyUsage() {
+    balances.forEach((key, value) {
+      value['used'] = 0;
+    });
+    basket.clear();
+
+    _persist();
+    notifyListeners();
+  }
+
+
   // ---------- Firestore I/O ----------
 
   /// Loads user-specific [balances] and [basket] from [FirebaseFirestore].
@@ -238,6 +259,14 @@ class AppState extends ChangeNotifier {
               },
             ),
           );
+
+        // Check if we need a monthly reset
+        final lastUpdate = data['updatedAt'] as Timestamp?;
+        if (_isNewMonth(lastUpdate)) {
+          print("📅 New month detected! Resetting balances...");
+          _resetMonthlyUsage();
+        }
+
       }
     } finally {
       _balancesLoaded = true;
