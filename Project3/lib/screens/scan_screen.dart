@@ -58,6 +58,42 @@ class _ScanScreenState extends State<ScanScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  // --- New Function to Show Scanner in Dialog ---
+  void _showScanDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Scan QR/Barcode'),
+          content: SizedBox(
+            width: 300,
+            height: 300,
+            child: MobileScanner(
+              // Using a minimal callback that navigates away immediately upon detection
+              onDetect: (capture) {
+                final barcode = capture.barcodes.firstOrNull;
+                if (barcode?.rawValue != null) {
+                  // Pass the scanned value back to the main screen
+                  _checkEligibility(barcode!.rawValue!);
+                  // Close the dialog immediately
+                  Navigator.of(context).pop();
+                  // Update the text field for visual confirmation
+                  _input.text = barcode.rawValue!;
+                }
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   /// Tests Firestore connectivity by querying a known UPC.
   ///
   /// Uses test UPC `000000743266` to verify [AplService] can read from Firestore.
@@ -387,7 +423,6 @@ class _ScanScreenState extends State<ScanScreen> {
                               ),
                             ),
                             keyboardType: TextInputType.number,
-                            maxLength: 13,
                             onSubmitted: (value) {
                               if (value.isNotEmpty) {
                                 _checkEligibility(value);
@@ -409,6 +444,18 @@ class _ScanScreenState extends State<ScanScreen> {
                                   label: const Text('Check'),
                                 ),
                               ),
+                              // --- START NEW BUTTON ---
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  // Used OutlinedButton for contrast
+                                  onPressed: _showScanDialog,
+                                  icon: const Icon(Icons.camera_alt),
+                                  label: const Text('Scan with Camera'),
+                                ),
+                              ),
+
+                              // --- END NEW BUTTON ---
                               if (_lastInfo != null) ...[
                                 const SizedBox(width: 12),
                                 Expanded(
