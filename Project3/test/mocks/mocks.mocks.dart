@@ -2104,6 +2104,22 @@ class MockAplService extends _i1.Mock implements _i18.AplService {
     _i1.throwOnMissingStub(this);
   }
 
+  // 👈 THIS IS THE MISSING METHOD THAT IS CAUSING THE ERROR
+  @override
+  _i7.Future<List<Map<String, dynamic>>> healthierSubstitutes({
+    required Map<String, dynamic> baseProduct,
+    required String category,
+    int? max,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#healthierSubstitutes, [category], {#max: max}),
+            // Must return a non-null Future of the correct type
+            returnValue: _i7.Future<List<Map<String, dynamic>>>.value(
+              <Map<String, dynamic>>[],
+            ),
+          )
+          as _i7.Future<List<Map<String, dynamic>>>);
+
   @override
   _i7.Future<Map<String, dynamic>?> findByUpc(String? upc) =>
       (super.noSuchMethod(

@@ -16,7 +16,7 @@ class TestAppState extends AppState {
 
   Map<String, dynamic> nutrition = {
     'calories': 100,
-    'totalFat' : 2.0,
+    'totalFat': 2.0,
     'saturatedFat': 0.5,
     'sodium': 100,
     'sugar': 4.0,
@@ -26,7 +26,6 @@ class TestAppState extends AppState {
 }
 
 void main() {
-
   // final fakeNutrition = {
   //   'calories': 100,
   //   'totalFat': 5,
@@ -127,7 +126,7 @@ void main() {
           upc: anyNamed('upc'),
           name: anyNamed('name'),
           category: anyNamed('category'),
-          nutrition: anyNamed('nutrition')
+          nutrition: anyNamed('nutrition'),
         ),
       ).thenReturn(true);
 
@@ -490,9 +489,7 @@ void main() {
         'fdcId': 1,
       };
 
-      when(mockAplService.findByUpc('12345')).thenAnswer(
-        (_) async => product,
-      );
+      when(mockAplService.findByUpc('12345')).thenAnswer((_) async => product);
       when(mockAppState.canAdd(argThat(isA<String>()))).thenReturn(true);
 
       when(
@@ -532,9 +529,7 @@ void main() {
         'fdcId': 1,
       };
 
-      when(mockAplService.findByUpc('12345')).thenAnswer(
-        (_) async => product,
-      );
+      when(mockAplService.findByUpc('12345')).thenAnswer((_) async => product);
       when(mockAppState.canAdd(argThat(isA<String>()))).thenReturn(true);
 
       when(
@@ -584,9 +579,7 @@ void main() {
         'fdcId': 1,
       };
 
-      when(mockAplService.findByUpc('12345')).thenAnswer(
-        (_) async => product,
-      );
+      when(mockAplService.findByUpc('12345')).thenAnswer((_) async => product);
       when(mockAppState.canAdd(argThat(isA<String>()))).thenReturn(true);
 
       final healthierItem = {
