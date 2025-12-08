@@ -95,7 +95,6 @@ class BasketScreen extends StatelessWidget {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     // Get the AppState and watch for changes
@@ -135,7 +134,7 @@ class BasketScreen extends StatelessWidget {
                   ),
                 ),
 
-                // 2. NEW: Checkout Footer
+                // 2. Checkout Footer
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -183,9 +182,13 @@ class BasketScreen extends StatelessWidget {
                                       const QRCheckoutScreen(),
                                 ),
                               );
-                            },style: ElevatedButton.styleFrom(
+                            },
+                            style: ElevatedButton.styleFrom(
                               minimumSize: const Size.fromHeight(50),
-                              side: BorderSide(color: const Color(0xFFD1001C), width: 2),
+                              side: const BorderSide(
+                                color: Color(0xFFD1001C),
+                                width: 2,
+                              ),
                             ),
                             icon: const Icon(Icons.qr_code),
                             label: const Text(
@@ -198,7 +201,6 @@ class BasketScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
@@ -240,11 +242,9 @@ class BasketScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-);
+    );
   }
 
   /// Builds the UI shown when the basket is empty.
