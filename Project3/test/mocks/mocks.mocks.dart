@@ -2211,13 +2211,13 @@ class MockAppState extends _i1.Mock implements _i19.AppState {
           as bool);
 
   @override
-  void incrementItem(String? upc) => super.noSuchMethod(
+  void incrementItem(String? upc, String category) => super.noSuchMethod(
     Invocation.method(#incrementItem, [upc]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void decrementItem(String? upc) => super.noSuchMethod(
+  void decrementItem(String? upc, String category) => super.noSuchMethod(
     Invocation.method(#decrementItem, [upc]),
     returnValueForMissingStub: null,
   );
