@@ -59,14 +59,14 @@ class NutritionalUtils {
   static List<NutritionalBadge> getBadges(Map<String, dynamic> nutrition) {
     final badges = <NutritionalBadge>[];
 
-    final calories = nutrition['calories'] as int? ?? 0;
+    final calories = (nutrition['calories'] as num?)?.toInt() ?? 0;
     final totalFat = (nutrition['totalFat'] as num?)?.toDouble() ?? 0.0;
     final saturatedFat = (nutrition['saturatedFat'] as num?)?.toDouble() ?? 0.0;
-    final sodium = nutrition['sodium'] as int? ?? 0;
+    final sodium = (nutrition['sodium'] as num?)?.toInt() ?? 0;
     final sugar = (nutrition['sugar'] as num?)?.toDouble() ?? 0.0;
     final protein = (nutrition['protein'] as num?)?.toDouble() ?? 0.0;
 
-    if (nutrition['wicEligible']) {
+    if (nutrition['wicEligible'] as bool? ?? false) {
       badges.add(NutritionalBadge.wicEligible);
     }
 
