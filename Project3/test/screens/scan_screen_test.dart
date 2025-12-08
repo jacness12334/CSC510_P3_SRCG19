@@ -1,3 +1,4 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
@@ -9,7 +10,32 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../mocks/mocks.mocks.dart';
 
+class TestAppState extends AppState {
+  TestAppState() : super(db: FakeFirebaseFirestore());
+  void tick() => notifyListeners();
+
+  Map<String, dynamic> nutrition = {
+    'calories': 100,
+    'totalFat' : 2.0,
+    'saturatedFat': 0.5,
+    'sodium': 100,
+    'sugar': 4.0,
+    'protein': 12.0,
+    'wicEligible': false,
+  };
+}
+
 void main() {
+
+  // final fakeNutrition = {
+  //   'calories': 100,
+  //   'totalFat': 5,
+  //   'saturatedFat': 2,
+  //   'sodium': 120,
+  //   'sugar': 10,
+  //   'protein': 3,
+  // };
+
   group('ScanScreen', () {
     late MockAplService mockAplService;
     late MockAppState mockAppState;
@@ -101,6 +127,7 @@ void main() {
           upc: anyNamed('upc'),
           name: anyNamed('name'),
           category: anyNamed('category'),
+          nutrition: anyNamed('nutrition')
         ),
       ).thenReturn(true);
 
@@ -119,6 +146,7 @@ void main() {
           upc: '12345',
           name: 'Test Product',
           category: 'Test Category',
+          nutrition: anyNamed('nutrition'),
         ),
       ).called(1);
     });
@@ -135,6 +163,7 @@ void main() {
           upc: anyNamed('upc'),
           name: anyNamed('name'),
           category: anyNamed('category'),
+          nutrition: anyNamed('nutrition'),
         ),
       ).thenReturn(true);
 
@@ -161,6 +190,7 @@ void main() {
           upc: anyNamed('upc'),
           name: anyNamed('name'),
           category: anyNamed('category'),
+          nutrition: anyNamed('nutrition'),
         ),
       );
     });
@@ -176,6 +206,7 @@ void main() {
           upc: anyNamed('upc'),
           name: anyNamed('name'),
           category: anyNamed('category'),
+          nutrition: anyNamed('nutrition'),
         ),
       ).thenReturn(true);
 
@@ -449,6 +480,178 @@ void main() {
 
       expect(find.byIcon(Icons.warning_amber_rounded), findsWidgets);
       expect(find.text('Category limit reached'), findsOneWidget);
+    });
+
+    testWidgets('loads healthier options and shows eco icon', (
+      WidgetTester tester,
+    ) async {
+      // APL findByUpc returns a product
+      final product = {
+        'name': 'Test Product',
+        'category': 'Snacks',
+        'fdcId': 1,
+      };
+
+      when(mockAplService.findByUpc('12345')).thenAnswer(
+        (_) async => product,
+      );
+      when(mockAppState.canAdd(argThat(isA<String>()))).thenReturn(true);
+
+      // Healthier substitutes: one item
+      when(
+        mockAplService.healthierSubstitutes(
+          category: any(named: 'category'),
+          baseProduct: product,
+          max: 5,
+        ),
+      ).thenAnswer(
+        (_) async => [
+          {
+            'name': 'Better Snack',
+            'category': 'Snacks',
+            'upc': '99999',
+            'healthScore': -10.2,
+          },
+        ],
+      );
+
+      await pumpScanScreen(tester);
+
+      // Act: check eligibility (desktop path)
+      await tester.enterText(find.byType(TextField), '12345');
+      await tester.tap(find.text('Check'));
+      await tester.pumpAndSettle();
+
+      // Assert: product visible
+      expect(find.text('Test Product'), findsOneWidget);
+
+      // Eco icon appears because healthier options list is non-empty
+      expect(find.byIcon(Icons.eco), findsOneWidget);
+    });
+
+    testWidgets('tapping eco icon opens healthier alternatives sheet', (
+      WidgetTester tester,
+    ) async {
+      final product = {
+        'name': 'Test Product',
+        'category': 'Snacks',
+        'fdcId': 1,
+      };
+
+      when(mockAplService.findByUpc('12345')).thenAnswer(
+        (_) async => product,
+      );
+      when(mockAppState.canAdd(argThat(isA<String>()))).thenReturn(true);
+
+      when(
+        mockAplService.healthierSubstitutes(
+          category: 'Snacks',
+          baseProduct: product,
+          max: 5,
+        ),
+      ).thenAnswer(
+        (_) async => [
+          {
+            'name': 'Better Snack',
+            'category': 'Snacks',
+            'upc': '99999',
+            'healthScore': -10.2,
+          },
+        ],
+      );
+
+      await pumpScanScreen(tester);
+
+      await tester.enterText(find.byType(TextField), '12345');
+      await tester.tap(find.text('Check'));
+      await tester.pumpAndSettle();
+
+      final ecoFinder = find.byIcon(Icons.eco);
+      expect(ecoFinder, findsOneWidget);
+
+      // Open the bottom sheet
+      await tester.tap(ecoFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Healthier Alternatives'), findsOneWidget);
+      expect(
+        find.textContaining('Lower scores indicate healthier choices.'),
+        findsOneWidget,
+      );
+      expect(find.text('Better Snack'), findsOneWidget);
+      expect(find.textContaining('Health Score:'), findsWidgets);
+    });
+
+    testWidgets('adding healthier item calls addItem with nutrition', (
+      WidgetTester tester,
+    ) async {
+      final product = {
+        'name': 'Test Product',
+        'category': 'Snacks',
+        'fdcId': 1,
+      };
+
+      when(mockAplService.findByUpc('12345')).thenAnswer(
+        (_) async => product,
+      );
+      when(mockAppState.canAdd(argThat(isA<String>()))).thenReturn(true);
+
+      final healthierItem = {
+        'name': 'Better Snack',
+        'category': 'Snacks',
+        'upc': '99999',
+        'healthScore': -10.2,
+        'foodNutrients': [
+          {'name': 'Energy', 'amount': 200, 'units': 'kcal'},
+          {'name': 'Total lipid (fat)', 'amount': 5.0, 'units': 'g'},
+          {'name': 'Fatty acids, total saturated', 'amount': 1.0, 'units': 'g'},
+          {'name': 'Sodium, Na', 'amount': 100, 'units': 'mg'},
+          {'name': 'Total Sugars', 'amount': 3.0, 'units': 'g'},
+          {'name': 'Sugars, added', 'amount': 1.0, 'units': 'g'},
+          {'name': 'Protein', 'amount': 8.0, 'units': 'g'},
+          {'name': 'Fiber, total dietary', 'amount': 4.0, 'units': 'g'},
+        ],
+      };
+
+      when(
+        mockAplService.healthierSubstitutes(
+          category: 'Snacks',
+          baseProduct: product,
+          max: 5,
+        ),
+      ).thenAnswer((_) async => [healthierItem]);
+
+      when(
+        mockAppState.addItem(
+          upc: anyNamed('upc'),
+          name: anyNamed('name'),
+          category: anyNamed('category'),
+          nutrition: anyNamed('nutrition'),
+        ),
+      ).thenReturn(true);
+
+      await pumpScanScreen(tester);
+
+      await tester.enterText(find.byType(TextField), '12345');
+      await tester.tap(find.text('Check'));
+      await tester.pumpAndSettle();
+
+      // Open sheet
+      await tester.tap(find.byIcon(Icons.eco));
+      await tester.pumpAndSettle();
+
+      // Tap add icon
+      await tester.tap(find.byIcon(Icons.add_circle_outline).first);
+      await tester.pumpAndSettle();
+
+      verify(
+        mockAppState.addItem(
+          upc: '99999',
+          name: 'Better Snack',
+          category: 'Snacks',
+          nutrition: anyNamed('nutrition'),
+        ),
+      ).called(1);
     });
   });
 }
