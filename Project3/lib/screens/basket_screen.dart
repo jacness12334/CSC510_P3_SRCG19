@@ -104,7 +104,7 @@ class BasketScreen extends StatelessWidget {
                     itemCount: basket.length,
                     itemBuilder: (context, index) {
                       final item = basket[index];
-                      return _BasketItem(item: item);
+                      return _BasketItem(item: item, index: index);
                     },
                   ),
                 ),
@@ -160,10 +160,12 @@ class BasketScreen extends StatelessWidget {
 /// and [AppState.decrementItem] respectively. Buttons are styled with
 /// visual feedback and disabled states based on category limits.
 class _BasketItem extends StatefulWidget {
-  const _BasketItem({required this.item});
+  const _BasketItem({required this.item, required this.index});
 
   /// The basket item data map containing 'upc', 'name', 'category', and 'qty'.
   final Map<String, dynamic> item;
+
+  final int index;
 
   @override
   State<_BasketItem> createState() => _BasketItemState();
@@ -177,9 +179,10 @@ class _BasketItemState extends State<_BasketItem> {
     final appState = context.watch<AppState>();
     final upc = widget.item['upc'] as String? ?? '';
     final name = widget.item['name'] as String? ?? 'Unknown';
-    final category = widget.item['category'] as String? ?? 'Unknown';
+    String category = widget.item['category'] as String? ?? 'Unknown';
     final qty = widget.item['qty'] as int? ?? 0;
     final canAdd = appState.canAdd(category);
+    final int itemIndex = widget.index;
 
     // Generate nutritional data if not present
     final nutrition =
@@ -223,19 +226,25 @@ class _BasketItemState extends State<_BasketItem> {
                 IconButton(
                   icon: const Icon(Icons.remove_circle_outline),
                   color: const Color(0xFFD1001C),
-                  onPressed: () => appState.decrementItem(upc),
+                  onPressed: () => appState.decrementItem(upc, category),
                   tooltip: 'Remove one',
                 ),
                 // Increment button
                 IconButton(
                   icon: Icon(
                     Icons.add_circle_outline,
-                    color: canAdd
-                        ? const Color(0xFFD1001C)
-                        : Colors.grey.shade300,
+                    color: const Color(0xFFD1001C),
                   ),
-                  onPressed: canAdd ? () => appState.incrementItem(upc) : null,
-                  tooltip: canAdd ? 'Add one' : 'Category limit reached',
+                  onPressed: canAdd
+                      ? () => appState.incrementItem(upc, category)
+                      : () => appState.incrementItemAndSwitchToPaid(
+                          upc,
+                          name,
+                          category,
+                          nutrition,
+                          itemIndex,
+                        ),
+                  tooltip: canAdd ? 'Add one' : 'Will add as paid',
                 ),
               ],
             ),

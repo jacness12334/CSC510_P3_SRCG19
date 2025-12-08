@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../utils/nutritional_utils.dart';
 
 /// Central application state manager that handles user-scoped WIC benefits
@@ -119,6 +120,10 @@ class AppState extends ChangeNotifier {
   /// This is called by [_ensureCategoryInit] when a category is first added
   /// to [balances].
   int? _deriveAllowed(String canonCat) {
+    // you can use money
+    if (canonCat.toUpperCase() == 'PAID') {
+      return null;
+    }
     // CVB / Fruit & Veg — uncapped
     if (canonCat.contains('CVB') ||
         canonCat.contains('FRUIT') ||
@@ -266,6 +271,39 @@ class AppState extends ChangeNotifier {
     }, SetOptions(merge: true));
   }
 
+  // A new method to handle the category switch and increment
+  void incrementItemAndSwitchToPaid(
+    String upc,
+    String name,
+    String originalCategory,
+    Map<String, dynamic>? nutrition,
+    int index,
+  ) {
+    if (_uid == null) return;
+    if (index < 0) return;
+
+    String cat = _canon(basket[index]['category'] as String);
+    _ensureCategoryInit(cat);
+
+    List<int> occurenceCount = [];
+
+    for (int i = 0; i < basket.length; i++) {
+      if (basket[i]['category'] == originalCategory) {
+        occurenceCount.add(i);
+      }
+    }
+
+    if (occurenceCount.length == 1) {
+      addItem(upc: upc, name: name, category: "PAID");
+    } else if (occurenceCount.length == 2) {
+      incrementItem(upc, "PAID");
+    }
+
+    // ignore: discarded_futures
+    _persist();
+    notifyListeners();
+  }
+
   // ---------- Public API used by screens ----------
 
   /// Returns true if another item from the given category can be added.
@@ -315,7 +353,7 @@ class AppState extends ChangeNotifier {
     final idx = basket.indexWhere((e) => e['upc'] == upc && upc.isNotEmpty);
     if (idx >= 0) {
       // existing line -> increment path
-      incrementItem(upc);
+      incrementItem(upc, category);
       return false;
     }
 
@@ -352,12 +390,19 @@ class AppState extends ChangeNotifier {
   /// Side effects:
   /// - Calls [_persist] to save to [FirebaseFirestore]
   /// - Calls [notifyListeners] to update UI
-  void incrementItem(String upc) {
+  void incrementItem(String upc, String category) {
     if (_uid == null) return;
-    final i = basket.indexWhere((e) => e['upc'] == upc);
+    int i = basket.indexWhere((e) => e['upc'] == upc);
     if (i < 0) return;
 
     final cat = _canon(basket[i]['category'] as String);
+
+    if (cat != category) {
+      i = basket.indexWhere((e) => e['upc'] == upc, 2);
+
+      if (i < 0) return;
+    }
+
     _ensureCategoryInit(cat);
     if (!_canAddCanon(cat)) return;
 
@@ -381,7 +426,7 @@ class AppState extends ChangeNotifier {
   /// Side effects:
   /// - Calls [_persist] to save to [FirebaseFirestore]
   /// - Calls [notifyListeners] to update UI
-  void decrementItem(String upc) {
+  void decrementItem(String upc, String category) {
     if (_uid == null) return;
     final i = basket.indexWhere((e) => e['upc'] == upc);
     if (i < 0) return;
