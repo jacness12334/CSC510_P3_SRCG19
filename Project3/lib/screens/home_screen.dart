@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart'; // make sure this path is correct
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

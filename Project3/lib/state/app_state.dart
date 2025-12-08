@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import '../utils/nutritional_utils.dart';
 
 /// Central application state manager that handles user-scoped WIC benefits
 /// balances and shopping basket data.
@@ -229,14 +230,18 @@ class AppState extends ChangeNotifier {
         basket
           ..clear()
           ..addAll(
-            raw.whereType<Map>().map(
-              (m) => {
+            raw.whereType<Map>().map((m) {
+              final cat = _canon((m['category'] ?? '').toString());
+              return {
                 'upc': (m['upc'] ?? '').toString(),
                 'name': (m['name'] ?? '').toString(),
-                'category': _canon((m['category'] ?? '').toString()),
+                'category': cat,
                 'qty': (m['qty'] is int) ? m['qty'] as int : 1,
-              },
-            ),
+                'nutrition':
+                    m['nutrition'] as Map<String, dynamic>? ??
+                    NutritionalUtils.generateMockNutrition(cat),
+              };
+            }),
           );
       }
     } finally {
@@ -299,6 +304,7 @@ class AppState extends ChangeNotifier {
     required String upc,
     required String name,
     required String category,
+    Map<String, dynamic>? nutrition,
   }) {
     if (_uid == null) return false;
     final cat = _canon(category);
@@ -313,7 +319,17 @@ class AppState extends ChangeNotifier {
       return false;
     }
 
-    basket.add({'upc': upc, 'name': name, 'category': cat, 'qty': 1});
+    // Generate nutritional data if not provided
+    final nutritionData =
+        nutrition ?? NutritionalUtils.generateMockNutrition(cat);
+
+    basket.add({
+      'upc': upc,
+      'name': name,
+      'category': cat,
+      'qty': 1,
+      'nutrition': nutritionData,
+    });
     balances[cat]!['used'] = (balances[cat]!['used'] ?? 0) + 1;
 
     // persist (fire-and-forget)
