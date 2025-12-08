@@ -182,7 +182,6 @@ class _BasketItemState extends State<_BasketItem> {
     String category = widget.item['category'] as String? ?? 'Unknown';
     final qty = widget.item['qty'] as int? ?? 0;
     final canAdd = appState.canAdd(category);
-    final int itemIndex = widget.index;
 
     // Generate nutritional data if not present
     final nutrition =
@@ -235,15 +234,7 @@ class _BasketItemState extends State<_BasketItem> {
                     Icons.add_circle_outline,
                     color: const Color(0xFFD1001C),
                   ),
-                  onPressed: canAdd
-                      ? () => appState.incrementItem(upc, category)
-                      : () => appState.incrementItemAndSwitchToPaid(
-                          upc,
-                          name,
-                          category,
-                          nutrition,
-                          itemIndex,
-                        ),
+                  onPressed: () => appState.incrementItem(upc, category),
                   tooltip: canAdd ? 'Add one' : 'Will add as paid',
                 ),
               ],

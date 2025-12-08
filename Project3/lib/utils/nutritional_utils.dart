@@ -14,81 +14,81 @@ class NutritionalUtils {
   static const int heartHealthyMaxSaturatedFat = 1; // grams
   static const int heartHealthyMaxSodium = 140; // mg
 
-  // /// Generates mock nutritional data based on product category.
-  // ///
-  // /// This simulates nutritional information for demonstration purposes.
-  // /// In a real application, this would come from a database or API.
-  // static Map<String, dynamic> generateMockNutrition(String category) {
-  //   final upperCategory = category.toUpperCase();
+  /// Generates mock nutritional data based on product category.
+  ///
+  /// This simulates nutritional information for demonstration purposes.
+  /// In a real application, this would come from a database or API.
+  static Map<String, dynamic> generateMockNutrition(String category) {
+    final upperCategory = category.toUpperCase();
 
-  //   // Default values
-  //   int calories = 150;
-  //   double totalFat = 5.0;
-  //   double saturatedFat = 2.0;
-  //   int sodium = 200;
-  //   double sugar = 8.0;
-  //   double protein = 3.0;
+    // Default values
+    int calories = 150;
+    double totalFat = 5.0;
+    double saturatedFat = 2.0;
+    int sodium = 200;
+    double sugar = 8.0;
+    double protein = 3.0;
 
-  //   // Category-specific values
-  //   if (upperCategory.contains('MILK') || upperCategory.contains('DAIRY')) {
-  //     calories = 90;
-  //     totalFat = 0.5;
-  //     saturatedFat = 0.2;
-  //     sodium = 120;
-  //     sugar = 12.0;
-  //     protein = 8.0;
-  //   } else if (upperCategory.contains('CHEESE') ||
-  //       upperCategory.contains('YOGURT')) {
-  //     calories = 100;
-  //     totalFat = 2.5;
-  //     saturatedFat = 1.5;
-  //     sodium = 150;
-  //     sugar = 6.0;
-  //     protein = 9.0;
-  //   } else if (upperCategory.contains('FRUIT') ||
-  //       upperCategory.contains('VEGETABLE')) {
-  //     calories = 60;
-  //     totalFat = 0.2;
-  //     saturatedFat = 0.0;
-  //     sodium = 5;
-  //     sugar = 10.0;
-  //     protein = 1.0;
-  //   } else if (upperCategory.contains('BREAD') ||
-  //       upperCategory.contains('GRAIN') ||
-  //       upperCategory.contains('CEREAL')) {
-  //     calories = 110;
-  //     totalFat = 1.5;
-  //     saturatedFat = 0.3;
-  //     sodium = 160;
-  //     sugar = 4.0;
-  //     protein = 4.0;
-  //   } else if (upperCategory.contains('MEAT') ||
-  //       upperCategory.contains('BEAN') ||
-  //       upperCategory.contains('PEANUT')) {
-  //     calories = 140;
-  //     totalFat = 2.0;
-  //     saturatedFat = 0.5;
-  //     sodium = 80;
-  //     sugar = 1.0;
-  //     protein = 15.0;
-  //   } else if (upperCategory.contains('JUICE')) {
-  //     calories = 110;
-  //     totalFat = 0.0;
-  //     saturatedFat = 0.0;
-  //     sodium = 10;
-  //     sugar = 22.0;
-  //     protein = 0.5;
-  //   }
+    // Category-specific values
+    if (upperCategory.contains('MILK') || upperCategory.contains('DAIRY')) {
+      calories = 90;
+      totalFat = 0.5;
+      saturatedFat = 0.2;
+      sodium = 120;
+      sugar = 12.0;
+      protein = 8.0;
+    } else if (upperCategory.contains('CHEESE') ||
+        upperCategory.contains('YOGURT')) {
+      calories = 100;
+      totalFat = 2.5;
+      saturatedFat = 1.5;
+      sodium = 150;
+      sugar = 6.0;
+      protein = 9.0;
+    } else if (upperCategory.contains('FRUIT') ||
+        upperCategory.contains('VEGETABLE')) {
+      calories = 60;
+      totalFat = 0.2;
+      saturatedFat = 0.0;
+      sodium = 5;
+      sugar = 10.0;
+      protein = 1.0;
+    } else if (upperCategory.contains('BREAD') ||
+        upperCategory.contains('GRAIN') ||
+        upperCategory.contains('CEREAL')) {
+      calories = 110;
+      totalFat = 1.5;
+      saturatedFat = 0.3;
+      sodium = 160;
+      sugar = 4.0;
+      protein = 4.0;
+    } else if (upperCategory.contains('MEAT') ||
+        upperCategory.contains('BEAN') ||
+        upperCategory.contains('PEANUT')) {
+      calories = 140;
+      totalFat = 2.0;
+      saturatedFat = 0.5;
+      sodium = 80;
+      sugar = 1.0;
+      protein = 15.0;
+    } else if (upperCategory.contains('JUICE')) {
+      calories = 110;
+      totalFat = 0.0;
+      saturatedFat = 0.0;
+      sodium = 10;
+      sugar = 22.0;
+      protein = 0.5;
+    }
 
-  //   return {
-  //     'calories': calories,
-  //     'totalFat': totalFat,
-  //     'saturatedFat': saturatedFat,
-  //     'sodium': sodium,
-  //     'sugar': sugar,
-  //     'protein': protein,
-  //   };
-  // }
+    return {
+      'calories': calories,
+      'totalFat': totalFat,
+      'saturatedFat': saturatedFat,
+      'sodium': sodium,
+      'sugar': sugar,
+      'protein': protein,
+    };
+  }
 
   /// Determines which nutritional badges should be displayed for a product.
   ///

@@ -270,61 +270,6 @@ class AppState extends ChangeNotifier {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
-  // app_state.dart
-
-  // ... (Other methods)
-
-  // A new method to handle the category switch and increment
-  void incrementItemAndSwitchToPaid(
-    String upc,
-    String name,
-    String originalCategory, // The original category (e.g., MILK)
-    Map<String, dynamic>? nutrition,
-    int index,
-  ) {
-    if (_uid == null) return;
-
-    const String paidCategory = 'PAID';
-
-    // 1. Check if a 'PAID' line item for this product (upc) already exists
-    final paidIndex = basket.indexWhere(
-      (e) => e['upc'] == upc && _canon(e['category'] as String) == paidCategory,
-    );
-
-    if (paidIndex >= 0) {
-      // 2. If 'PAID' item exists, increment its quantity.
-      // We don't need to check canAdd(PAID) as it's uncapped (returns null for allowed).
-      basket[paidIndex]['qty'] = (basket[paidIndex]['qty'] ?? 1) + 1;
-      // Also update the 'PAID' used count in balances (which will always be uncapped)
-      _ensureCategoryInit(paidCategory);
-      balances[paidCategory]!['used'] =
-          (balances[paidCategory]!['used'] ?? 0) + 1;
-    } else {
-      // 3. If no 'PAID' item exists, create a new one with qty = 1.
-      final cat = _canon(paidCategory);
-      _ensureCategoryInit(cat); // Ensure 'PAID' is initialized (uncapped)
-
-      final nutritionData =
-          nutrition ?? NutritionalUtils.generateMockNutrition(cat);
-
-      basket.add({
-        'upc': upc,
-        'name': name,
-        'category': cat,
-        'qty': 1,
-        'nutrition': nutritionData,
-      });
-
-      // Increment 'PAID' used count
-      balances[cat]!['used'] = (balances[cat]!['used'] ?? 0) + 1;
-    }
-
-    // ignore: discarded_futures
-    _persist();
-    notifyListeners();
-  }
-
-  // ... (Rest of the class)
 
   // ---------- Public API used by screens ----------
 
@@ -370,12 +315,23 @@ class AppState extends ChangeNotifier {
     final cat = _canon(category);
 
     _ensureCategoryInit(cat);
-    if (!_canAddCanon(cat)) return false;
 
+    // Check if the item already exists in some form
     final idx = basket.indexWhere((e) => e['upc'] == upc && upc.isNotEmpty);
     if (idx >= 0) {
       // existing line -> increment path
       incrementItem(upc, category);
+      return false;
+    }
+
+    // If it doesn't exist, we try to add it.
+    // If regular category is full, we must check if we can add to PAID logic,
+    // but typically addItem implies adding a NEW line.
+    if (!_canAddCanon(cat)) {
+      // If we can't add to canonical, logic dictates we probably shouldn't add
+      // the initial WIC item. However, user might expect auto-PAID.
+      // For now, retaining original logic: prevent add if full.
+      // Use incrementItem on an existing item to trigger overflow.
       return false;
     }
 
@@ -399,72 +355,133 @@ class AppState extends ChangeNotifier {
     return true;
   }
 
-  /// Increases the quantity of an existing basket item by 1.
+  /// Increases the quantity of a product.
   ///
-  /// Searches [basket] for an item with matching [upc], increments its
-  /// `'qty'` field, and updates the category's used count in [balances].
-  ///
-  /// Does nothing if:
-  /// - No user is logged in
-  /// - Item not found in basket
-  /// - Category limit would be exceeded
+  /// 1. Tries to fill the original WIC category first.
+  /// 2. If the WIC category is full (capped), it overflows into the 'PAID' category.
+  ///    This will either find an existing 'PAID' item for this UPC or create a new one.
   ///
   /// Side effects:
   /// - Calls [_persist] to save to [FirebaseFirestore]
   /// - Calls [notifyListeners] to update UI
   void incrementItem(String upc, String category) {
     if (_uid == null) return;
-    int i = basket.indexWhere((e) => e['upc'] == upc);
-    if (i < 0) return;
 
-    final cat = _canon(basket[i]['category'] as String);
+    final originalCat = _canon(category);
+    _ensureCategoryInit(originalCat);
 
-    if (cat != category) {
-      i = basket.indexWhere((e) => e['upc'] == upc, 2);
+    // 1. Check if we can add to the requested (original) category
+    if (_canAddCanon(originalCat)) {
+      // Find the specific line item corresponding to this category/upc
+      final index = basket.indexWhere(
+        (e) => e['upc'] == upc && _canon(e['category']) == originalCat,
+      );
 
-      if (i < 0) return;
+      if (index >= 0) {
+        basket[index]['qty'] = (basket[index]['qty'] ?? 1) + 1;
+        balances[originalCat]!['used'] =
+            (balances[originalCat]!['used'] ?? 0) + 1;
+      }
+      // Note: If index < 0, it means the item isn't in basket yet.
+      // Usually addItem handles creation, but if reached here, we skip.
+    } else {
+      // 2. Original category is full; Fill up PAID category instead.
+      const String paidCategory = 'PAID';
+      _ensureCategoryInit(paidCategory);
+
+      final paidIndex = basket.indexWhere(
+        (e) =>
+            e['upc'] == upc && _canon(e['category'] as String) == paidCategory,
+      );
+
+      if (paidIndex >= 0) {
+        // Increment existing PAID item
+        basket[paidIndex]['qty'] = (basket[paidIndex]['qty'] ?? 1) + 1;
+        balances[paidCategory]!['used'] =
+            (balances[paidCategory]!['used'] ?? 0) + 1;
+      } else {
+        // Create new PAID item based on the original item's details
+        // We need to find the original WIC item to copy details (name/nutrition)
+        final wicItem = basket.firstWhere(
+          (e) => e['upc'] == upc && _canon(e['category']) == originalCat,
+          orElse: () => {},
+        );
+
+        if (wicItem.isNotEmpty) {
+          basket.add({
+            'upc': upc,
+            'name': wicItem['name'],
+            'category': paidCategory,
+            'qty': 1,
+            'nutrition': wicItem['nutrition'], // Shared nutrition data
+          });
+          balances[paidCategory]!['used'] =
+              (balances[paidCategory]!['used'] ?? 0) + 1;
+        }
+      }
     }
-
-    _ensureCategoryInit(cat);
-    if (!_canAddCanon(cat)) return;
-
-    basket[i]['qty'] = (basket[i]['qty'] ?? 1) + 1;
-    balances[cat]!['used'] = (balances[cat]!['used'] ?? 0) + 1;
 
     // ignore: discarded_futures
     _persist();
     notifyListeners();
   }
 
-  /// Decreases the quantity of an existing basket item by 1.
+  /// Decreases the quantity of a product.
   ///
-  /// If the new quantity reaches 0, the entire item is removed from [basket].
-  /// Updates the category's used count in [balances] accordingly.
-  ///
-  /// Does nothing if:
-  /// - No user is logged in
-  /// - Item not found in basket
+  /// 1. Checks if a 'PAID' version of this item exists (overflow).
+  /// 2. If 'PAID' exists, decrements that first (removing it if qty hits 0).
+  /// 3. If no 'PAID' version exists, decrements the original WIC item.
   ///
   /// Side effects:
   /// - Calls [_persist] to save to [FirebaseFirestore]
   /// - Calls [notifyListeners] to update UI
   void decrementItem(String upc, String category) {
     if (_uid == null) return;
-    final i = basket.indexWhere((e) => e['upc'] == upc);
-    if (i < 0) return;
 
-    final cat = _canon(basket[i]['category'] as String);
-    final newQty = (basket[i]['qty'] ?? 1) - 1;
+    const String paidCategory = 'PAID';
+    final originalCat = _canon(category);
 
-    if (balances.containsKey(cat)) {
-      final used = (balances[cat]!['used'] ?? 0) as int;
-      balances[cat]!['used'] = (used - 1).clamp(0, 999);
-    }
+    // 1. Check if a 'PAID' line item for this product exists
+    final paidIndex = basket.indexWhere(
+      (e) => e['upc'] == upc && _canon(e['category'] as String) == paidCategory,
+    );
 
-    if (newQty <= 0) {
-      basket.removeAt(i);
+    if (paidIndex >= 0) {
+      // PAID category exists -> Decrease that
+      final newQty = (basket[paidIndex]['qty'] ?? 1) - 1;
+
+      // Update balance
+      if (balances.containsKey(paidCategory)) {
+        final used = (balances[paidCategory]!['used'] ?? 0) as int;
+        balances[paidCategory]!['used'] = (used - 1).clamp(0, 999);
+      }
+
+      if (newQty <= 0) {
+        basket.removeAt(paidIndex);
+      } else {
+        basket[paidIndex]['qty'] = newQty;
+      }
     } else {
-      basket[i]['qty'] = newQty;
+      // 2. No PAID category -> Decrease original category
+      final wicIndex = basket.indexWhere(
+        (e) =>
+            e['upc'] == upc && _canon(e['category'] as String) == originalCat,
+      );
+
+      if (wicIndex >= 0) {
+        final newQty = (basket[wicIndex]['qty'] ?? 1) - 1;
+
+        if (balances.containsKey(originalCat)) {
+          final used = (balances[originalCat]!['used'] ?? 0) as int;
+          balances[originalCat]!['used'] = (used - 1).clamp(0, 999);
+        }
+
+        if (newQty <= 0) {
+          basket.removeAt(wicIndex);
+        } else {
+          basket[wicIndex]['qty'] = newQty;
+        }
+      }
     }
 
     // ignore: discarded_futures
