@@ -408,7 +408,6 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // Add button should be disabled initially
       final addButtonFinder = find.widgetWithText(
         FilledButton,
         'Add to Basket',
@@ -485,7 +484,6 @@ void main() {
     testWidgets('loads healthier options and shows eco icon', (
       WidgetTester tester,
     ) async {
-      // APL findByUpc returns a product
       final product = {
         'name': 'Test Product',
         'category': 'Snacks',
@@ -497,7 +495,6 @@ void main() {
       );
       when(mockAppState.canAdd(argThat(isA<String>()))).thenReturn(true);
 
-      // Healthier substitutes: one item
       when(
         mockAplService.healthierSubstitutes(
           category: 'Snacks',
@@ -517,15 +514,12 @@ void main() {
 
       await pumpScanScreen(tester);
 
-      // Act: check eligibility (desktop path)
       await tester.enterText(find.byType(TextField), '12345');
       await tester.tap(find.text('Check'));
       await tester.pumpAndSettle();
 
-      // Assert: product visible
       expect(find.text('Test Product'), findsOneWidget);
 
-      // Eco icon appears because healthier options list is non-empty
       expect(find.byIcon(Icons.eco), findsOneWidget);
     });
 
@@ -569,7 +563,6 @@ void main() {
       final ecoFinder = find.byIcon(Icons.eco);
       expect(ecoFinder, findsOneWidget);
 
-      // Open the bottom sheet
       await tester.tap(ecoFinder);
       await tester.pumpAndSettle();
 
@@ -636,11 +629,9 @@ void main() {
       await tester.tap(find.text('Check'));
       await tester.pumpAndSettle();
 
-      // Open sheet
       await tester.tap(find.byIcon(Icons.eco));
       await tester.pumpAndSettle();
 
-      // Tap add icon
       await tester.tap(find.byIcon(Icons.add_circle_outline).first);
       await tester.pumpAndSettle();
 
