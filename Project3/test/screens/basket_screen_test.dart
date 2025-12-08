@@ -67,7 +67,7 @@ class TestAppState extends AppState {
 
     final idx = basket.indexWhere((e) => e['upc'] == upc && upc.isNotEmpty);
     if (idx >= 0) {
-      incrementItem(upc);
+      incrementItem(upc, category);
       return false;
     }
 
@@ -78,7 +78,7 @@ class TestAppState extends AppState {
   }
 
   @override
-  void incrementItem(String upc) {
+  void incrementItem(String upc, String category) {
     final i = basket.indexWhere((e) => e['upc'] == upc);
     if (i < 0) return;
     final cat = (basket[i]['category'] as String)
@@ -97,7 +97,7 @@ class TestAppState extends AppState {
   }
 
   @override
-  void decrementItem(String upc) {
+  void decrementItem(String upc, String category) {
     final i = basket.indexWhere((e) => e['upc'] == upc);
     if (i < 0) return;
     final cat = (basket[i]['category'] as String)
@@ -166,7 +166,7 @@ void main() {
       final app = TestAppState();
       // Two items: MILK x2, BREAD x1 => total 3
       app.addItem(upc: '111', name: 'Whole Milk Gallon', category: 'Milk');
-      app.incrementItem('111');
+      app.incrementItem('111', 'Milk');
       app.addItem(upc: '222', name: 'Brown Bread', category: 'Bread');
 
       await tester.pumpWidget(_appWithRouter(app: app));
