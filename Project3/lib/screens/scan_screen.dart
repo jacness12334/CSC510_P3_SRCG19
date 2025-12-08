@@ -151,7 +151,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
       final name = info['name'] ?? 'Unknown';
       final cat = info['category'] ?? '?';
-      _snack('$name ($cat) - Eligible!');
+      //_snack('$name ($cat) - Eligible!');
     } catch (e) {
       _snack('Error: $e');
     } finally {
