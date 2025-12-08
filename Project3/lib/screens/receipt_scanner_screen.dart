@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:wolfbite/utils/nutritional_utils.dart';
 import '../state/app_state.dart';
 import '../services/apl_service.dart';
+import 'dart:async'; // Add this at the top
 
 class ReceiptScannerScreen extends StatefulWidget {
   const ReceiptScannerScreen({super.key});
@@ -86,13 +87,14 @@ class _ReceiptScannerScreenState extends State<ReceiptScannerScreen> {
   }
 
   /// Sends the image to the free OCR.space API
-  Future<String> _fetchOcrText(String base64Image) async {
-    // Use the public 'helloworld' key (limits: 25kb max size sometimes, mostly for testing).
-    // For a smoother demo, get a free key at https://ocr.space/ocrapi/freekey
-    const apiKey = 'helloworld'; 
+Future<String> _fetchOcrText(String base64Image) async {
+  // Use the public 'helloworld' key (limits: 25kb max size sometimes, mostly for testing).
+  // For a smoother demo, get a free key at https://ocr.space/ocrapi/freekey
+  const apiKey = 'helloworld'; 
 
-    final uri = Uri.parse('https://api.ocr.space/parse/image');
-    
+  final uri = Uri.parse('https://api.ocr.space/parse/image');
+
+  try {
     final response = await http.post(
       uri,
       body: {
@@ -100,26 +102,35 @@ class _ReceiptScannerScreenState extends State<ReceiptScannerScreen> {
         'base64Image': base64Image,
         'language': 'eng',
         'isOverlayRequired': 'false',
+        'detectOrientation': 'true', // Added for better accuracy
+        'scale': 'true',            // Added for better accuracy
       },
-    );
+    ).timeout(const Duration(seconds: 15)); // <-- STOP WAITING AFTER 15 SECONDS
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      
+
       // Check for API errors
       if (data['IsErroredOnProcessing'] == true) {
         throw Exception(data['ErrorMessage']?[0] ?? "API Processing Error");
       }
-      
+
       final parsedResults = data['ParsedResults'] as List?;
       if (parsedResults != null && parsedResults.isNotEmpty) {
         return parsedResults[0]['ParsedText'] as String;
       }
       return "";
     } else {
+      // 403 usually means the 'helloworld' key is banned/throttled
+      if (response.statusCode == 403) {
+        throw Exception("API Limit Reached. Try a new API Key.");
+      }
       throw Exception("API Error: ${response.statusCode}");
     }
+  } on TimeoutException catch (_) {
+    throw Exception("Connection timed out. Check internet or API status.");
   }
+}
 
   /// Find 12-digit numbers and lookup in APL
   Future<void> _parseUPCs(String fullText) async {
