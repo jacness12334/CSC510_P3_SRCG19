@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../state/app_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'qr_checkout_screen.dart';
 import '../widgets/nutritional_badges.dart';
 import '../utils/nutritional_utils.dart';
 
@@ -24,6 +25,76 @@ import '../utils/nutritional_utils.dart';
 /// in [ScanScreen].
 class BasketScreen extends StatelessWidget {
   const BasketScreen({super.key});
+
+
+  void _showQRDialog(BuildContext context, AppState app) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // User must click a button to exit
+      builder: (ctx) => AlertDialog(
+        title: const Center(child: Text('Cashier Handoff')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Present this code to the cashier',
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            // Dummy QR Image (using a large Icon as a placeholder)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.black12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.qr_code_2, 
+                size: 200, 
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          // Cancel Button (Aborts checkout)
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          
+          // Finish Button (Commits the transaction)
+          FilledButton(
+            onPressed: () async {
+              // 1. Perform the actual DB checkout
+              await app.checkout();
+
+              // 2. Close the dialog
+              if (ctx.mounted) {
+                Navigator.pop(ctx); 
+              }
+
+              // 3. Show success and navigate away
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Transaction Complete! Balances updated.'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                context.go('/scan');
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFD1001C), // Match your app theme
+            ),
+            child: const Text('Finish Transaction'),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -53,52 +124,7 @@ class BasketScreen extends StatelessWidget {
           ? _buildEmptyState(context)
           : Column(
               children: [
-                // Total items header
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD1001C).withValues(alpha: 0.1),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: const Color(0xFFD1001C).withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total Items:',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFD1001C),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD1001C),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '$totalItems',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Basket items list
+                // 1. Existing List of item
                 Expanded(
                   child: ListView.builder(
                     itemCount: basket.length,
@@ -108,9 +134,117 @@ class BasketScreen extends StatelessWidget {
                     },
                   ),
                 ),
-              ],
+
+                // 2. NEW: Checkout Footer
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Total Items:',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '$totalItems',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFD1001C),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.of(context, rootNavigator: true).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const QRCheckoutScreen(),
+                                ),
+                              );
+                            },style: ElevatedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(50),
+                              side: BorderSide(color: const Color(0xFFD1001C), width: 2),
+                            ),
+                            icon: const Icon(Icons.qr_code),
+                            label: const Text(
+                              "Ready to Checkout",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFD1001C),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Clear Cart?'),
+                                  content: const Text(
+                                    'This will remove all items from your basket.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        app.clearBasket();
+                                        Navigator.pop(ctx);
+                                      },
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.red,
+                                      ),
+                                      child: const Text('Clear All'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.red,
+                            ),
+                            child: const Text('Clear Cart'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
-    );
+          ],
+        ),
+);
   }
 
   /// Builds the UI shown when the basket is empty.
