@@ -270,39 +270,61 @@ class AppState extends ChangeNotifier {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
+  // app_state.dart
+
+  // ... (Other methods)
 
   // A new method to handle the category switch and increment
   void incrementItemAndSwitchToPaid(
     String upc,
     String name,
-    String originalCategory,
+    String originalCategory, // The original category (e.g., MILK)
     Map<String, dynamic>? nutrition,
     int index,
   ) {
     if (_uid == null) return;
-    if (index < 0) return;
 
-    String cat = _canon(basket[index]['category'] as String);
-    _ensureCategoryInit(cat);
+    const String paidCategory = 'PAID';
 
-    List<int> occurenceCount = [];
+    // 1. Check if a 'PAID' line item for this product (upc) already exists
+    final paidIndex = basket.indexWhere(
+      (e) => e['upc'] == upc && _canon(e['category'] as String) == paidCategory,
+    );
 
-    for (int i = 0; i < basket.length; i++) {
-      if (basket[i]['category'] == originalCategory) {
-        occurenceCount.add(i);
-      }
-    }
+    if (paidIndex >= 0) {
+      // 2. If 'PAID' item exists, increment its quantity.
+      // We don't need to check canAdd(PAID) as it's uncapped (returns null for allowed).
+      basket[paidIndex]['qty'] = (basket[paidIndex]['qty'] ?? 1) + 1;
+      // Also update the 'PAID' used count in balances (which will always be uncapped)
+      _ensureCategoryInit(paidCategory);
+      balances[paidCategory]!['used'] =
+          (balances[paidCategory]!['used'] ?? 0) + 1;
+    } else {
+      // 3. If no 'PAID' item exists, create a new one with qty = 1.
+      final cat = _canon(paidCategory);
+      _ensureCategoryInit(cat); // Ensure 'PAID' is initialized (uncapped)
 
-    if (occurenceCount.length == 1) {
-      addItem(upc: upc, name: name, category: "PAID");
-    } else if (occurenceCount.length == 2) {
-      incrementItem(upc, "PAID");
+      final nutritionData =
+          nutrition ?? NutritionalUtils.generateMockNutrition(cat);
+
+      basket.add({
+        'upc': upc,
+        'name': name,
+        'category': cat,
+        'qty': 1,
+        'nutrition': nutritionData,
+      });
+
+      // Increment 'PAID' used count
+      balances[cat]!['used'] = (balances[cat]!['used'] ?? 0) + 1;
     }
 
     // ignore: discarded_futures
     _persist();
     notifyListeners();
   }
+
+  // ... (Rest of the class)
 
   // ---------- Public API used by screens ----------
 
