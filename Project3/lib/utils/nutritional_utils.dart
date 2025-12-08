@@ -49,6 +49,7 @@ class NutritionalUtils {
       'addedSugar': getAmt('Sugars, added'),
       'protein': getAmt('Protein'),
       'fiber': getAmt('Fiber, total dietary'),
+      'wicEligible': data['eligible'],
     };
   }
 
@@ -65,13 +66,13 @@ class NutritionalUtils {
     final sugar = (nutrition['sugar'] as num?)?.toDouble() ?? 0.0;
     final protein = (nutrition['protein'] as num?)?.toDouble() ?? 0.0;
 
+    if (nutrition['wicEligible']) {
+      badges.add(NutritionalBadge.wicEligible);
+    }
+
     // Low Fat
     if (totalFat <= lowFatThreshold) {
       badges.add(NutritionalBadge.lowFat);
-    }
-
-    if(nutrition[]){
-
     }
 
     // Low Sodium
@@ -112,6 +113,7 @@ enum NutritionalBadge {
   highProtein,
   lowCalorie,
   heartHealthy,
+  wicEligible,
 }
 
 /// Extension to provide display properties for nutritional badges.
@@ -131,11 +133,13 @@ extension NutritionalBadgeExtension on NutritionalBadge {
         return 'Low Calorie';
       case NutritionalBadge.heartHealthy:
         return 'Heart Healthy';
+      case NutritionalBadge.wicEligible:
+        return 'WIC Eligible';
     }
   }
 
   /// Returns the icon for the badge.
-  IconData get icon {
+  Object get icon {
     switch (this) {
       case NutritionalBadge.lowFat:
         return Icons.water_drop_outlined;
@@ -149,6 +153,8 @@ extension NutritionalBadgeExtension on NutritionalBadge {
         return Icons.energy_savings_leaf;
       case NutritionalBadge.heartHealthy:
         return Icons.favorite_outline;
+      case NutritionalBadge.wicEligible:
+        return Image.asset('assets/images/wic-logo.png');
     }
   }
 
@@ -167,6 +173,8 @@ extension NutritionalBadgeExtension on NutritionalBadge {
         return Colors.teal;
       case NutritionalBadge.heartHealthy:
         return Colors.red;
+      case NutritionalBadge.wicEligible:
+        return Colors.transparent;
     }
   }
 }

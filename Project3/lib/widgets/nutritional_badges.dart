@@ -45,18 +45,47 @@ class NutritionalBadges extends StatelessWidget {
       spacing: 4,
       runSpacing: 4,
       children: displayBadges.map((badge) {
-        return Tooltip(
-          message: badge.label,
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: badge.color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: badge.color.withOpacity(0.3), width: 1),
+        if (badge.icon is IconData) {
+          return Tooltip(
+            message: badge.label,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: badge.color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: badge.color.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Icon(
+                badge.icon as IconData,
+                size: size,
+                color: badge.color,
+              ),
             ),
-            child: Icon(badge.icon, size: size, color: badge.color),
-          ),
-        );
+          );
+        } else {
+          return Tooltip(
+            message: badge.label,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: badge.color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: badge.color.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: SizedBox(
+                width: 24.0,
+                height: 24.0,
+                child: badge.icon as Image,
+              ),
+            ),
+          );
+        }
       }).toList(),
     );
   }
@@ -83,13 +112,27 @@ class NutritionalBadgesCompact extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: displayBadges.map((badge) {
-        return Padding(
-          padding: const EdgeInsets.only(right: 4),
-          child: Tooltip(
-            message: badge.label,
-            child: Icon(badge.icon, size: 16, color: badge.color),
-          ),
-        );
+        if (badge.icon is IconData) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: Tooltip(
+              message: badge.label,
+              child: Icon(badge.icon as IconData, size: 16, color: badge.color),
+            ),
+          );
+        } else {
+          return Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: Tooltip(
+              message: badge.label,
+              child: SizedBox(
+                width: 24.0,
+                height: 24.0,
+                child: badge.icon as Image,
+              ),
+            ),
+          );
+        }
       }).toList(),
     );
   }
