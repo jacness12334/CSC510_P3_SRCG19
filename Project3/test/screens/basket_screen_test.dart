@@ -16,12 +16,23 @@ class TestAppState extends AppState {
   /// Allow manual UI refresh when we mutate fields directly.
   void tick() => notifyListeners();
 
+  Map<String, dynamic> nutrition = {
+    'calories': 100,
+    'totalFat': 2.0,
+    'saturatedFat': 0.5,
+    'sodium': 100,
+    'sugar': 4.0,
+    'protein': 12.0,
+    'wicEligible': false,
+  };
+
   // --- Override mutations to remove _uid and Firestore persistence requirements.
   @override
   bool addItem({
     required String upc,
     required String name,
     required String category,
+    Map<String, dynamic>? nutrition,
   }) {
     final cat = category.trim().replaceAll(RegExp(r'\s+'), ' ').toUpperCase();
     // Ensure category exists/capped like real code
@@ -66,7 +77,7 @@ class TestAppState extends AppState {
 
     final idx = basket.indexWhere((e) => e['upc'] == upc && upc.isNotEmpty);
     if (idx >= 0) {
-      incrementItem(upc);
+      incrementItem(upc, category);
       return false;
     }
 
@@ -77,7 +88,7 @@ class TestAppState extends AppState {
   }
 
   @override
-  void incrementItem(String upc) {
+  void incrementItem(String upc, String category) {
     final i = basket.indexWhere((e) => e['upc'] == upc);
     if (i < 0) return;
     final cat = (basket[i]['category'] as String)
@@ -96,7 +107,7 @@ class TestAppState extends AppState {
   }
 
   @override
-  void decrementItem(String upc) {
+  void decrementItem(String upc, String category) {
     final i = basket.indexWhere((e) => e['upc'] == upc);
     if (i < 0) return;
     final cat = (basket[i]['category'] as String)
@@ -164,16 +175,16 @@ void main() {
     testWidgets('renders items and total badge', (tester) async {
       final app = TestAppState();
       // Two items: MILK x2, BREAD x1 => total 3
-      app.addItem(upc: '111', name: 'Whole Milk Gallon', category: 'Milk');
-      app.incrementItem('111');
-      app.addItem(upc: '222', name: 'Brown Bread', category: 'Bread');
+      app.addItem(upc: '111', name: 'Whole Milk Gallon', category: 'Milk', nutrition: app.nutrition);
+      app.incrementItem('111', 'Milk');
+      app.addItem(upc: '222', name: 'Brown Bread', category: 'Bread', nutrition: app.nutrition);
 
       await tester.pumpWidget(_appWithRouter(app: app));
       await tester.pumpAndSettle();
 
       // Header badge should show totalItems = 3
       expect(find.text('Total Items:'), findsOneWidget);
-      expect(find.text('3'), findsWidgets); // badge and a qty "2" also appear
+      expect(find.text('3'), findsWidgets);
 
       // Item tiles present by names
       expect(find.text('Whole Milk Gallon'), findsOneWidget);
@@ -184,7 +195,7 @@ void main() {
       tester,
     ) async {
       final app = TestAppState();
-      app.addItem(upc: '333', name: 'Yogurt Cups', category: 'Dairy'); // qty=1
+      app.addItem(upc: '333', name: 'Yogurt Cups', category: 'Dairy', nutrition: app.nutrition); // qty=1
       await tester.pumpWidget(_appWithRouter(app: app));
       await tester.pumpAndSettle();
 
@@ -211,7 +222,7 @@ void main() {
       expect(find.text('Your basket is empty'), findsOneWidget);
     });
 
-    testWidgets('plus disabled when canAdd == false', (tester) async {
+    testWidgets('plus adds as paid when canAdd == false', (tester) async {
       final app = TestAppState();
       // Force category cap reached: allowed=1, used=1, qty=1
       app.balances['MILK'] = {'allowed': 1, 'used': 1};
@@ -230,7 +241,8 @@ void main() {
       expect(plus, findsOneWidget);
 
       final plusBtn = tester.widget<IconButton>(plus);
-      expect(plusBtn.onPressed, isNull); // disabled
+      expect(plusBtn.onPressed, isNotNull);
+      expect(plusBtn.tooltip, 'Will add as paid');
     });
 
     testWidgets('tooltips exist for add/remove controls', (tester) async {
@@ -240,6 +252,7 @@ void main() {
         upc: '555',
         name: 'Oat Cereal',
         category: 'Cereal',
+        nutrition: app.nutrition
       ); // default allowed >= 2
       await tester.pumpWidget(_appWithRouter(app: app));
       await tester.pumpAndSettle();
@@ -262,15 +275,15 @@ void main() {
       await tester.pumpAndSettle();
 
       final plusBtnAfter = tester.widget<IconButton>(plus);
-      expect(plusBtnAfter.onPressed, isNull);
-      expect(plusBtnAfter.tooltip, 'Category limit reached');
+      expect(plusBtnAfter.onPressed, isNotNull);
+      expect(plusBtnAfter.tooltip, 'Will add as paid');
     });
 
     testWidgets('long product names render without overflow', (tester) async {
       final app = TestAppState();
       const longName =
           'Very Very Very Long Product Name That Still Should Not Overflow The Tile';
-      app.addItem(upc: '666', name: longName, category: 'Snacks');
+      app.addItem(upc: '666', name: longName, category: 'Snacks', nutrition: app.nutrition);
       await tester.pumpWidget(_appWithRouter(app: app));
       await tester.pumpAndSettle();
 

@@ -2104,6 +2104,22 @@ class MockAplService extends _i1.Mock implements _i18.AplService {
     _i1.throwOnMissingStub(this);
   }
 
+  // 👈 THIS IS THE MISSING METHOD THAT IS CAUSING THE ERROR
+  @override
+  _i7.Future<List<Map<String, dynamic>>> healthierSubstitutes({
+    required Map<String, dynamic> baseProduct,
+    required String category,
+    int? max,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#healthierSubstitutes, [category], {#max: max}),
+            // Must return a non-null Future of the correct type
+            returnValue: _i7.Future<List<Map<String, dynamic>>>.value(
+              <Map<String, dynamic>>[],
+            ),
+          )
+          as _i7.Future<List<Map<String, dynamic>>>);
+
   @override
   _i7.Future<Map<String, dynamic>?> findByUpc(String? upc) =>
       (super.noSuchMethod(
@@ -2197,25 +2213,27 @@ class MockAppState extends _i1.Mock implements _i19.AppState {
     required String? upc,
     required String? name,
     required String? category,
+    Map<String, dynamic>? nutrition,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#addItem, [], {
               #upc: upc,
               #name: name,
               #category: category,
+              #nutrition: nutrition,
             }),
             returnValue: false,
           )
           as bool);
 
   @override
-  void incrementItem(String? upc) => super.noSuchMethod(
+  void incrementItem(String? upc, String category) => super.noSuchMethod(
     Invocation.method(#incrementItem, [upc]),
     returnValueForMissingStub: null,
   );
 
   @override
-  void decrementItem(String? upc) => super.noSuchMethod(
+  void decrementItem(String? upc, String category) => super.noSuchMethod(
     Invocation.method(#decrementItem, [upc]),
     returnValueForMissingStub: null,
   );
