@@ -174,14 +174,15 @@ class _ScanScreenState extends State<ScanScreen> {
       return;
     }
 
+    String category;
+
     final appState = context.read<AppState>();
     final category = _lastInfo!['category'] ?? 'Unknown';
     final nutrition = NutritionalUtils.buildNutritionFromFoodNutrients(_lastInfo!);
 
     // Check if item can be added
     if (!appState.canAdd(category)) {
-      _snack('Cannot add: Category limit reached');
-      return;
+      category = "Paid";
     }
 
     appState.addItem(
