@@ -44,12 +44,20 @@
 
 ---
 
-## ✨ Features
+## 📄 Demo
+
+[![▶ Watch Demo](https://img.youtube.com/vi/jVnnK5uBznI/maxresdefault.jpg)](https://drive.google.com/drive/folders/1f9GWDyXS6KWoICaTHnpUJQOfn6ZkmLgA?usp=sharing)
+
+---
+
+## ✨ New Features From Project 3
 
 - **Swap Coach** - Healthy alternatives to each item if applicable.
 - **Nutrition/WIC Icons and Nutritional info**: Nutritional Information and icons to display nutrition and WIC info.
 - **QR Checkout Handoff**: Generate QR code before checkout
 - **Receipt OCR Import**: Auto-update category balances.
+
+## Original Features
 
 - **Barcode Scanner**: Scan product barcodes to check WIC eligibility instantly
 - **User Authentication**: Secure sign-up and login with Firebase
@@ -182,11 +190,13 @@ We welcome contributions! Please see our [Contributing Guidelines](https://githu
 
 **CSC510 - Group 19**
 
-| Name                     | Role      | GitHub                                                 |
-| ------------------------ | --------- | ------------------------------------------------------ |
-| Suyesh Jadhav            | Developer | [@SuyeshJadhav](https://github.com/SuyeshJadhav)       |
-| Digvijay Sanjeev Sonvane | Developer | [@digvijaysonvane](https://github.com/DVJAY11)         |
-| Vanaja Binay Agarwal     | Developer | [@vanajaagarwal](https://github.com/PositivelyBookish) |
+| Name                     | Role
+| ------------------------ | ---------
+| Jacob Phillips           | Developer
+| Aarya Rajoju             | Developer
+| Aadya Maurya             | Developer
+| Galav Sharma             | Developer
+| Janelle Correia          | Developer
 
 ---
 
@@ -194,11 +204,6 @@ We welcome contributions! Please see our [Contributing Guidelines](https://githu
 
 This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/SuyeshJadhav/CSC510_G19/blob/main/Project2/LICENSE.md) file for details.
 
----
-
-## 📄 Demo
-
-[![▶ Watch Demo](https://img.youtube.com/vi/jVnnK5uBznI/maxresdefault.jpg)](https://www.youtube.com/watch?v=jVnnK5uBznI)
 ---
 
 
