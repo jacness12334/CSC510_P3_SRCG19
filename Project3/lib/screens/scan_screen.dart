@@ -174,11 +174,11 @@ class _ScanScreenState extends State<ScanScreen> {
       return;
     }
 
-    String category;
-
     final appState = context.read<AppState>();
-    final category = _lastInfo!['category'] ?? 'Unknown';
-    final nutrition = NutritionalUtils.buildNutritionFromFoodNutrients(_lastInfo!);
+    String category = _lastInfo!['category'] ?? 'Unknown';
+    final nutrition = NutritionalUtils.buildNutritionFromFoodNutrients(
+      _lastInfo!,
+    );
 
     // Check if item can be added
     if (!appState.canAdd(category)) {
@@ -201,7 +201,7 @@ class _ScanScreenState extends State<ScanScreen> {
       _input.clear();
     });
   }
-  
+
   /// Loads healthier substitute options for the currently scanned product.
   ///
   /// Requires [_lastInfo] to describe a valid product, including a non-empty
@@ -271,7 +271,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, 
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -281,47 +281,70 @@ class _ScanScreenState extends State<ScanScreen> {
             padding: const EdgeInsets.all(16),
             child: SingleChildScrollView(
               child: Column(
-                mainAxisSize: MainAxisSize.min, 
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Healthier Alternatives',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: const Color(0xFFD1001C),
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: const Color(0xFFD1001C),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
-                    Text(
-                      'Health score is based on penalties (sugar, fat, and sodium) and bonuses (fiber and protein).\nLower scores indicate healthier choices.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[700],
-                          ),
-                    ),
+                  Text(
+                    'Health score is based on penalties (sugar, fat, and sodium) and bonuses (fiber and protein).\nLower scores indicate healthier choices.',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+                  ),
                   const SizedBox(height: 16),
                   ..._healthierOptions!.map((item) {
                     final name = item['name'] ?? 'Unknown';
                     final cat = item['category'] ?? '';
                     final upc = item['upc'] ?? '';
-                    final score = (item['healthScore'] is num) ? item['healthScore'].toStringAsFixed(1) : '-';
+                    final score = (item['healthScore'] is num)
+                        ? item['healthScore'].toStringAsFixed(1)
+                        : '-';
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Card(
                         elevation: 2,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
+                          ),
                           child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center, 
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                    Text(
+                                      name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                     const SizedBox(height: 2),
-                                    Text('Category: $cat', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                    Text('UPC: $upc', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                    Text(
+                                      'Category: $cat',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    Text(
+                                      'UPC: $upc',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
                                     const SizedBox(height: 4),
                                     Text(
                                       'Health Score: $score',
@@ -342,7 +365,10 @@ class _ScanScreenState extends State<ScanScreen> {
                                   shape: BoxShape.circle,
                                 ),
                                 child: IconButton(
-                                  icon: const Icon(Icons.add_circle_outline, color: Colors.green),
+                                  icon: const Icon(
+                                    Icons.add_circle_outline,
+                                    color: Colors.green,
+                                  ),
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(),
                                   onPressed: () {
@@ -350,7 +376,10 @@ class _ScanScreenState extends State<ScanScreen> {
                                       upc: upc,
                                       name: name,
                                       category: cat,
-                                      nutrition: NutritionalUtils.buildNutritionFromFoodNutrients(item),
+                                      nutrition:
+                                          NutritionalUtils.buildNutritionFromFoodNutrients(
+                                            item,
+                                          ),
                                     );
                                     Navigator.of(ctx).pop();
                                     _snack('Added healthier item: $name');
@@ -416,7 +445,7 @@ class _ScanScreenState extends State<ScanScreen> {
             onPressed: () async {
               // 1. Stop the barcode scanner so it releases the camera
               await _scannerController.stop();
-              
+
               if (!context.mounted) return;
 
               // 2. Go to the receipt screen
@@ -512,7 +541,8 @@ class _ScanScreenState extends State<ScanScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Text(
@@ -528,23 +558,33 @@ class _ScanScreenState extends State<ScanScreen> {
                                     const SizedBox(
                                       width: 20,
                                       height: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
                                     )
-                                  else if (_healthierOptions != null && _healthierOptions!.isNotEmpty)
+                                  else if (_healthierOptions != null &&
+                                      _healthierOptions!.isNotEmpty)
                                     Container(
                                       width: 40,
                                       height: 40,
                                       decoration: BoxDecoration(
-                                        color: Colors.green.withValues(alpha: 0.1),
+                                        color: Colors.green.withValues(
+                                          alpha: 0.1,
+                                        ),
                                         shape: BoxShape.circle,
                                       ),
                                       child: IconButton(
-                                        icon: const Icon(Icons.eco, color: Colors.green, size: 24),
+                                        icon: const Icon(
+                                          Icons.eco,
+                                          color: Colors.green,
+                                          size: 24,
+                                        ),
                                         iconSize: 24,
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
                                         onPressed: _showHealthierOptions,
-                                        tooltip: 'View healthier alternatives (${_healthierOptions!.length})',
+                                        tooltip:
+                                            'View healthier alternatives (${_healthierOptions!.length})',
                                       ),
                                     ),
                                 ],
@@ -552,7 +592,9 @@ class _ScanScreenState extends State<ScanScreen> {
                               const SizedBox(height: 8),
                               NutritionalBadgesCompact(
                                 nutrition:
-                                    NutritionalUtils.buildNutritionFromFoodNutrients(_lastInfo!),
+                                    NutritionalUtils.buildNutritionFromFoodNutrients(
+                                      _lastInfo!,
+                                    ),
                               ),
                               const SizedBox(height: 8),
                               Text(
@@ -736,7 +778,8 @@ class _ScanScreenState extends State<ScanScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Expanded(
                                         child: Text(
@@ -752,23 +795,33 @@ class _ScanScreenState extends State<ScanScreen> {
                                         const SizedBox(
                                           width: 20,
                                           height: 20,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
                                         )
-                                      else if (_healthierOptions != null && _healthierOptions!.isNotEmpty)
+                                      else if (_healthierOptions != null &&
+                                          _healthierOptions!.isNotEmpty)
                                         Container(
                                           width: 40,
                                           height: 40,
                                           decoration: BoxDecoration(
-                                            color: Colors.green.withValues(alpha: 0.1),
+                                            color: Colors.green.withValues(
+                                              alpha: 0.1,
+                                            ),
                                             shape: BoxShape.circle,
                                           ),
                                           child: IconButton(
-                                            icon: const Icon(Icons.eco, color: Colors.green, size: 24),
+                                            icon: const Icon(
+                                              Icons.eco,
+                                              color: Colors.green,
+                                              size: 24,
+                                            ),
                                             iconSize: 24,
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
                                             onPressed: _showHealthierOptions,
-                                            tooltip: 'View healthier alternatives (${_healthierOptions!.length})',
+                                            tooltip:
+                                                'View healthier alternatives (${_healthierOptions!.length})',
                                           ),
                                         ),
                                     ],
@@ -776,7 +829,9 @@ class _ScanScreenState extends State<ScanScreen> {
                                   const SizedBox(height: 12),
                                   NutritionalBadgesCompact(
                                     nutrition:
-                                        NutritionalUtils.buildNutritionFromFoodNutrients(_lastInfo!),
+                                        NutritionalUtils.buildNutritionFromFoodNutrients(
+                                          _lastInfo!,
+                                        ),
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
