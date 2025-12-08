@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../state/app_state.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'qr_checkout_screen.dart';
 
 /// Screen displaying the user's current shopping basket with item management.
 ///
@@ -51,52 +52,7 @@ class BasketScreen extends StatelessWidget {
           ? _buildEmptyState(context)
           : Column(
               children: [
-                // Total items header
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD1001C).withValues(alpha: 0.1),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: const Color(0xFFD1001C).withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total Items:',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFD1001C),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD1001C),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '$totalItems',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Basket items list
+                // 1. Existing List of item
                 Expanded(
                   child: ListView.builder(
                     itemCount: basket.length,
@@ -104,6 +60,112 @@ class BasketScreen extends StatelessWidget {
                       final item = basket[index];
                       return _BasketItem(item: item);
                     },
+                  ),
+                ),
+
+                // 2. NEW: Checkout Footer
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Total Items:',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '$totalItems',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFD1001C),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.of(context, rootNavigator: true).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const QRCheckoutScreen(),
+                                ),
+                              );
+                            },style: ElevatedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(50),
+                              side: BorderSide(color: const Color(0xFFD1001C), width: 2),
+                            ),
+                            icon: const Icon(Icons.qr_code),
+                            label: const Text(
+                              "Ready to Checkout",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFD1001C),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Clear Cart?'),
+                                  content: const Text(
+                                    'This will remove all items from your basket.',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        app.clearBasket();
+                                        Navigator.pop(ctx);
+                                      },
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.red,
+                                      ),
+                                      child: const Text('Clear All'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.red,
+                            ),
+                            child: const Text('Clear Cart'),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
