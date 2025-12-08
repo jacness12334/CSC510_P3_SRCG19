@@ -136,14 +136,16 @@ class _ReceiptScannerScreenState extends State<ReceiptScannerScreen> {
       final upc = match.group(0)!;
       foundCount++;
       
-      final info = await _apl.findByUpc(upc);
-      if (info != null) {
-        // Avoid duplicates
-        if (!validItems.any((item) => item['upc'] == upc)) {
-          validItems.add(info);
-        }
-      }
+    final info = await _apl.findByUpc(upc);
+    if (info != null) {
+    final productWithUpc = Map<String, dynamic>.from(info);
+    productWithUpc['upc'] = upc; 
+
+    if (!validItems.any((item) => item['upc'] == upc)) {
+        validItems.add(productWithUpc);
     }
+    }    
+}
 
     setState(() {
       _foundItems = validItems;
