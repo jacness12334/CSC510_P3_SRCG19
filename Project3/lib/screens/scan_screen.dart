@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import '../state/app_state.dart';
 import '../services/apl_service.dart';
+import 'receipt_scanner_screen.dart';
 
 /// Barcode scanning screen for WIC eligibility checking.
 ///
@@ -28,6 +29,7 @@ class ScanScreen extends StatefulWidget {
 
 class _ScanScreenState extends State<ScanScreen> {
   final _input = TextEditingController();
+  final MobileScannerController _scannerController = MobileScannerController();
   late final AplService _apl;
   late final FirebaseAuth _auth;
 
@@ -179,6 +181,24 @@ class _ScanScreenState extends State<ScanScreen> {
         title: const Text('Scan Product'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.receipt),
+            tooltip: 'Scan Receipt',
+            onPressed: () async {
+              // 1. Stop the barcode scanner so it releases the camera
+              await _scannerController.stop();
+              
+              if (!context.mounted) return;
+
+              // 2. Go to the receipt screen
+              await Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ReceiptScannerScreen()),
+              );
+
+              // 3. Restart the barcode scanner when we come back
+              _scannerController.start();
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
               // await FirebaseAuth.instance.signOut();
@@ -216,7 +236,10 @@ class _ScanScreenState extends State<ScanScreen> {
                             ),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: MobileScanner(onDetect: _onDetect),
+                          child: MobileScanner(
+                            controller: _scannerController,
+                            onDetect: _onDetect,
+                          ),
                         ),
                       ),
                     ),
