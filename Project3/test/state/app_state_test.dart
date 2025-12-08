@@ -52,7 +52,7 @@ void main() {
     test('incrementItem increases the quantity of an existing item', () {
       appState.updateUser(mockUser);
       appState.addItem(upc: '12345', name: 'Milk', category: 'MILK');
-      appState.incrementItem('12345');
+      appState.incrementItem('12345', 'MILK');
 
       expect(appState.basket.first['qty'], 2);
       expect(appState.balances['MILK']!['used'], 2);
@@ -61,8 +61,8 @@ void main() {
     test('decrementItem decreases the quantity of an existing item', () {
       appState.updateUser(mockUser);
       appState.addItem(upc: '12345', name: 'Milk', category: 'MILK');
-      appState.incrementItem('12345');
-      appState.decrementItem('12345');
+      appState.incrementItem('12345', 'MILK');
+      appState.decrementItem('12345', 'MILK');
 
       expect(appState.basket.first['qty'], 1);
       expect(appState.balances['MILK']!['used'], 1);
@@ -71,7 +71,7 @@ void main() {
     test('decrementItem removes an item when quantity reaches zero', () {
       appState.updateUser(mockUser);
       appState.addItem(upc: '12345', name: 'Milk', category: 'MILK');
-      appState.decrementItem('12345');
+      appState.decrementItem('12345', 'MILK');
 
       expect(appState.basket, isEmpty);
       expect(appState.balances['MILK']!['used'], 0);
