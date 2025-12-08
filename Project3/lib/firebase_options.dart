@@ -85,4 +85,3 @@ class DefaultFirebaseOptions {
     storageBucket: 'se25fall-g1-proj3.firebasestorage.app',
     iosBundleId: 'com.example.wolfbite',
   );
-}
