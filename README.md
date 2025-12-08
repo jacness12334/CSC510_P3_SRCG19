@@ -53,9 +53,20 @@
 ## ✨ New Features From Project 3
 
 - **Swap Coach** - Healthy alternatives to each item if applicable.
+
+This feature ranks various alternatives based on food category to the food you're currently choosing, and displays them if you click on the green leaf button as you go to scan an item in order to encourage healthy eating. 
+
 - **Nutrition/WIC Icons and Nutritional info**: Nutritional Information and icons to display nutrition and WIC info.
+
+Every food item displays small badges such as "low fat" or "low calorie" or "low sodium" if they meet the criteria in order to encourage users to search for foods that fit their specific dietary needs. Additionally, there is a drop-down menu on each food item that displays nutrition information for that item.
+
 - **QR Checkout Handoff**: Generate QR code before checkout
+
+After adding many different items to the cart, it's possible to generate a QR code that generates a platform-agnostic representation of the transaction you currently have in your cart.
+
 - **Receipt OCR Import**: Auto-update category balances.
+
+Allows importing of reciepts that display UPC (Universal Product Code) identification numbers. It will automatically check-out each item towards your monthly balance. Reciepts can be imported from an image or from your camera, allowing users to easily keep track of their own purchases and WIC balances.
 
 ## Original Features
 
