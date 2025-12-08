@@ -35,6 +35,9 @@ class _ScanScreenState extends State<ScanScreen> {
   Map<String, dynamic>? _lastInfo;
   bool _busy = false;
 
+  List<Map<String, dynamic>>? _healthierOptions;
+  bool _loadingHealthier = false;
+
   @override
   void initState() {
     super.initState();
@@ -106,6 +109,7 @@ class _ScanScreenState extends State<ScanScreen> {
         _lastScanned = upc;
         _lastInfo = info;
       });
+      _loadHealthierOptions();
 
       final name = info['name'] ?? 'Unknown';
       final cat = info['category'] ?? '?';
@@ -154,6 +158,176 @@ class _ScanScreenState extends State<ScanScreen> {
       _input.clear();
     });
   }
+  
+  /// Loads healthier substitute options for the currently scanned product.
+  ///
+  /// Requires [_lastInfo] to describe a valid product, including a non-empty
+  /// category field, otherwise the function returns early without changes.
+  ///
+  /// Calls the APL backend to fetch up to [max] healthier substitutes in the
+  /// same category via healthierSubstitutes, then stores the results in
+  /// [_healthierOptions] and toggles [_loadingHealthier] to drive the UI.
+  ///
+  /// If no options are returned or an error occurs, shows a [SnackBar] message
+  /// indicating either that no healthier alternatives are available or that
+  /// an error occurred while loading them.
+  Future<void> _loadHealthierOptions() async {
+    if (_lastInfo == null) return;
+
+    final category = (_lastInfo!['category'] ?? '') as String;
+    if (category.isEmpty) return;
+
+    setState(() {
+      _loadingHealthier = true;
+      _healthierOptions = null;
+    });
+
+    try {
+      final options = await _apl.healthierSubstitutes(
+        category: category,
+        baseProduct: _lastInfo!,
+        max: 5,
+      );
+      if (!mounted) return;
+
+      if (options.isEmpty) {
+        _snack('No healthier alternatives available.');
+      }
+
+      setState(() {
+        _healthierOptions = options;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      _snack('Error loading healthier options: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingHealthier = false;
+        });
+      }
+    }
+  }
+
+  /// Shows a modal bottom sheet listing healthier substitute options for the
+  /// currently loaded product in [_healthierOptions].
+  ///
+  /// Requires [_healthierOptions] to be non-null and non-empty; otherwise the
+  /// function returns immediately and no sheet is shown.
+  ///
+  /// Presents each alternative with name, category, UPC, and a computed health
+  /// score where lower (more negative) values indicate healthier choices
+  /// based on penalties (sugar, fat, sodium) and bonuses (fiber, protein).
+  ///
+  /// Allows the user to add a selected healthier item to the shopping basket
+  /// via [AppState.addItem], and shows a confirmation [SnackBar] on success.
+  void _showHealthierOptions() {
+    if (_healthierOptions == null || _healthierOptions!.isEmpty) return;
+
+    final appState = context.read<AppState>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, 
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min, 
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Healthier Alternatives',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: const Color(0xFFD1001C),
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                    Text(
+                      'Health score is based on penalties (sugar, fat, and sodium) and bonuses (fiber and protein).\nLower scores indicate healthier choices.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[700],
+                          ),
+                    ),
+                  const SizedBox(height: 16),
+                  ..._healthierOptions!.map((item) {
+                    final name = item['name'] ?? 'Unknown';
+                    final cat = item['category'] ?? '';
+                    final upc = item['upc'] ?? '';
+                    final score = (item['healthScore'] is num) ? item['healthScore'].toStringAsFixed(1) : '-';
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Card(
+                        elevation: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center, 
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                    const SizedBox(height: 2),
+                                    Text('Category: $cat', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                    Text('UPC: $upc', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Health Score: $score',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(Icons.add_circle_outline, color: Colors.green),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () {
+                                    appState.addItem(
+                                      upc: upc,
+                                      name: name,
+                                      category: cat,
+                                    );
+                                    Navigator.of(ctx).pop();
+                                    _snack('Added healthier item: $name');
+                                  },
+                                  tooltip: 'Add to basket',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   /// Handles barcode detection from [MobileScanner].
   ///
@@ -167,6 +341,20 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
+  /// Builds the main scan screen UI for both mobile and desktop layouts.
+  ///
+  /// On mobile, shows a live barcode scanner, actions to re-check eligibility
+  /// and add the last scanned product to the basket, plus a summary card with
+  /// product details, category-limit warnings, and a shortcut to healthier
+  /// alternatives when available.
+  ///
+  /// On larger screens, replaces the scanner with a manual UPC entry form,
+  /// while still allowing eligibility checks, basket addition, and viewing
+  /// healthier alternatives for the last checked product.
+  ///
+  /// Uses [AppState] to determine whether the current product can be added,
+  /// and conditionally shows loading indicators and the healthier-options
+  /// icon based on [_loadingHealthier] and [_healthierOptions].
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<AppState>();
@@ -258,13 +446,43 @@ class _ScanScreenState extends State<ScanScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                _lastInfo!['name'] ?? 'Unknown',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Color(0xFFD1001C),
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      _lastInfo!['name'] ?? 'Unknown',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Color(0xFFD1001C),
+                                      ),
+                                    ),
+                                  ),
+                                  if (_loadingHealthier)
+                                    const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  else if (_healthierOptions != null && _healthierOptions!.isNotEmpty)
+                                    Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.withValues(alpha: 0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: IconButton(
+                                        icon: const Icon(Icons.eco, color: Colors.green, size: 24),
+                                        iconSize: 24,
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        onPressed: _showHealthierOptions,
+                                        tooltip: 'View healthier alternatives (${_healthierOptions!.length})',
+                                      ),
+                                    ),
+                                ],
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -436,13 +654,43 @@ class _ScanScreenState extends State<ScanScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    _lastInfo!['name'] ?? 'Unknown',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Color(0xFFD1001C),
-                                    ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          _lastInfo!['name'] ?? 'Unknown',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: Color(0xFFD1001C),
+                                          ),
+                                        ),
+                                      ),
+                                      if (_loadingHealthier)
+                                        const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        )
+                                      else if (_healthierOptions != null && _healthierOptions!.isNotEmpty)
+                                        Container(
+                                          width: 40,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                            color: Colors.green.withValues(alpha: 0.1),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: IconButton(
+                                            icon: const Icon(Icons.eco, color: Colors.green, size: 24),
+                                            iconSize: 24,
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            onPressed: _showHealthierOptions,
+                                            tooltip: 'View healthier alternatives (${_healthierOptions!.length})',
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
