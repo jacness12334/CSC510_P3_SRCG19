@@ -258,9 +258,18 @@ class AppState extends ChangeNotifier {
                 'name': (m['name'] ?? '').toString(),
                 'category': cat,
                 'qty': (m['qty'] is int) ? m['qty'] as int : 1,
-                'nutrition':
-                    m['nutrition'] as Map<String, dynamic>? ??
-                    NutritionalUtils.generateMockNutrition(cat),
+                'nutrition': m['nutrition'] as Map<String, dynamic>? ??
+                  const {
+                    'calories': 0.0,
+                    'totalFat': 0.0,
+                    'saturatedFat': 0.0,
+                    'transFat': 0.0,
+                    'sodium': 0.0,
+                    'sugar': 0.0,
+                    'addedSugar': 0.0,
+                    'protein': 0.0,
+                    'fiber': 0.0,
+                  },
               };
             }),
           );
@@ -322,6 +331,7 @@ class AppState extends ChangeNotifier {
   /// - [upc]: Universal Product Code
   /// - [name]: Display name for the product
   /// - [category]: Raw category string (will be canonicalized)
+  /// - [nutrition]: Nutrition data (map of maps)
   ///
   /// Returns true if a new line was created, false if only quantity increased.
   ///
@@ -349,8 +359,18 @@ class AppState extends ChangeNotifier {
     }
 
     // Generate nutritional data if not provided
-    final nutritionData =
-        nutrition ?? NutritionalUtils.generateMockNutrition(cat);
+    final nutritionData = nutrition ??
+    const {
+        'calories': 0.0,
+        'totalFat': 0.0,
+        'saturatedFat': 0.0,
+        'transFat': 0.0,
+        'sodium': 0.0,
+        'sugar': 0.0,
+        'addedSugar': 0.0,
+        'protein': 0.0,
+        'fiber': 0.0,
+    };
 
     basket.add({
       'upc': upc,
@@ -367,6 +387,17 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     return true;
   }
+
+  // bool addItemFromProduct(Map<String, dynamic> product) {
+  //   final nutrition =
+  //       NutritionalUtils.buildNutritionFromFoodNutrients(product);
+  //   return addItem(
+  //     upc: product['upc'] ?? '',
+  //     name: product['name'] ?? 'Unknown',
+  //     category: product['category'] ?? 'Unknown',
+  //     nutrition: nutrition,
+  //   );
+  // }
 
   /// Increases the quantity of an existing basket item by 1.
   ///

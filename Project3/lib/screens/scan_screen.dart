@@ -176,6 +176,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
     final appState = context.read<AppState>();
     final category = _lastInfo!['category'] ?? 'Unknown';
+    final nutrition = NutritionalUtils.buildNutritionFromFoodNutrients(_lastInfo!);
 
     // Check if item can be added
     if (!appState.canAdd(category)) {
@@ -187,6 +188,7 @@ class _ScanScreenState extends State<ScanScreen> {
       upc: _lastScanned ?? '',
       name: _lastInfo!['name'] ?? 'Unknown',
       category: category,
+      nutrition: nutrition,
     );
 
     _snack('Added ${_lastInfo!['name']} to basket');
@@ -347,6 +349,7 @@ class _ScanScreenState extends State<ScanScreen> {
                                       upc: upc,
                                       name: name,
                                       category: cat,
+                                      nutrition: NutritionalUtils.buildNutritionFromFoodNutrients(item),
                                     );
                                     Navigator.of(ctx).pop();
                                     _snack('Added healthier item: $name');
@@ -548,9 +551,7 @@ class _ScanScreenState extends State<ScanScreen> {
                               const SizedBox(height: 8),
                               NutritionalBadgesCompact(
                                 nutrition:
-                                    NutritionalUtils.generateMockNutrition(
-                                      _lastInfo!['category'] ?? 'Unknown',
-                                    ),
+                                    NutritionalUtils.buildNutritionFromFoodNutrients(_lastInfo!),
                               ),
                               const SizedBox(height: 8),
                               Text(
@@ -774,9 +775,7 @@ class _ScanScreenState extends State<ScanScreen> {
                                   const SizedBox(height: 12),
                                   NutritionalBadgesCompact(
                                     nutrition:
-                                        NutritionalUtils.generateMockNutrition(
-                                          _lastInfo!['category'] ?? 'Unknown',
-                                        ),
+                                        NutritionalUtils.buildNutritionFromFoodNutrients(_lastInfo!),
                                   ),
                                   const SizedBox(height: 12),
                                   Text(

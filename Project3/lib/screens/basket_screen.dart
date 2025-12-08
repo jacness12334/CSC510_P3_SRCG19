@@ -318,7 +318,17 @@ class _BasketItemState extends State<_BasketItem> {
     // Generate nutritional data if not present
     final nutrition =
         widget.item['nutrition'] as Map<String, dynamic>? ??
-        NutritionalUtils.generateMockNutrition(category);
+        const {
+          'calories': 0.0,
+          'totalFat': 0.0,
+          'saturatedFat': 0.0,
+          'transFat': 0.0,
+          'sodium': 0.0,
+          'sugar': 0.0,
+          'addedSugar': 0.0,
+          'protein': 0.0,
+          'fiber': 0.0,
+        };
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

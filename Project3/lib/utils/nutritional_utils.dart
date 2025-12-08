@@ -14,6 +14,44 @@ class NutritionalUtils {
   static const int heartHealthyMaxSaturatedFat = 1; // grams
   static const int heartHealthyMaxSodium = 140; // mg
 
+  /// Builds a normalized nutrition map from a product's foodNutrients array.
+  ///
+  /// Expects [data] to contain a foodNutrients list of maps with name,
+  /// amount, and units fields, as returned by the APL/database for a food.
+  ///
+  /// Extracts common nutrients used by the app (energy, fats, sodium, sugars,
+  /// protein, and fiber) by matching on the nutrient name, returning each
+  /// as a double amount. Missing nutrients default to 0.0 so callers can
+  /// safely consume the result without additional null checks.
+  static Map<String, dynamic> buildNutritionFromFoodNutrients(
+    Map<String, dynamic> data,
+  ) {
+    final nutrients = (data['foodNutrients'] as List<dynamic>? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .toList();
+
+    double getAmt(String name) {
+      final n = nutrients.firstWhere(
+        (m) => (m['name'] as String?)?.toLowerCase() == name.toLowerCase(),
+        orElse: () => const {},
+      );
+      final v = n['amount'];
+      return v is num ? v.toDouble() : 0.0;
+    }
+
+    return {
+      'calories': getAmt('Energy'),
+      'totalFat': getAmt('Total lipid (fat)'),
+      'saturatedFat': getAmt('Fatty acids, total saturated'),
+      'transFat': getAmt('Fatty acids, total trans'),
+      'sodium': getAmt('Sodium, Na'),
+      'sugar': getAmt('Total Sugars'),
+      'addedSugar': getAmt('Sugars, added'),
+      'protein': getAmt('Protein'),
+      'fiber': getAmt('Fiber, total dietary'),
+    };
+  }
+
   /// Generates mock nutritional data based on product category.
   ///
   /// This simulates nutritional information for demonstration purposes.

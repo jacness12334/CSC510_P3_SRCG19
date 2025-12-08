@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http; // For API calls
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wolfbite/utils/nutritional_utils.dart';
 import '../state/app_state.dart';
 import '../services/apl_service.dart';
 
@@ -160,7 +161,8 @@ class _ReceiptScannerScreenState extends State<ReceiptScannerScreen> {
       if(app.addItem(
         upc: item['upc'], 
         name: item['name'], 
-        category: item['category']
+        category: item['category'],
+        nutrition: NutritionalUtils.buildNutritionFromFoodNutrients(item),
       )) count++;
     }
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Added $count items')));
