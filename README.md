@@ -46,6 +46,11 @@
 
 ## ✨ Features
 
+- **Swap Coach** - Healthy alternatives to each item if applicable.
+- **Nutrition/WIC Icons and Nutritional info**: Nutritional Information and icons to display nutrition and WIC info.
+- **QR Checkout Handoff**: Generate QR code before checkout
+- **Receipt OCR Import**: Auto-update category balances.
+
 - **Barcode Scanner**: Scan product barcodes to check WIC eligibility instantly
 - **User Authentication**: Secure sign-up and login with Firebase
 - **Shopping Cart**: Add items and manage your cart seamlessly
@@ -206,7 +211,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](https://gi
 ---
 
 <p align="center">
-    Made with ❤️ by CSC510 Group 19
+    Made with ❤️ by CSC510 Group 19 and Group 1
 </p>
 
 <p align="center">
