@@ -191,6 +191,27 @@ class AppState extends ChangeNotifier {
     return true; // uncapped
   }
 
+
+  /// Checks if the last update was in a previous month/year compared to now.
+  bool _isNewMonth(Timestamp? lastUpdate) {
+    if (lastUpdate == null) return false; // No history, assume fresh
+    final last = lastUpdate.toDate();
+    final now = DateTime.now();
+    return last.month != now.month || last.year != now.year;
+  }
+
+  /// Resets all "used" counts to 0 and clears the basket.
+  void _resetMonthlyUsage() {
+    balances.forEach((key, value) {
+      value['used'] = 0;
+    });
+    basket.clear();
+
+    _persist();
+    notifyListeners();
+  }
+
+
   // ---------- Firestore I/O ----------
 
   /// Loads user-specific [balances] and [basket] from [FirebaseFirestore].
@@ -242,12 +263,29 @@ class AppState extends ChangeNotifier {
                 'name': (m['name'] ?? '').toString(),
                 'category': cat,
                 'qty': (m['qty'] is int) ? m['qty'] as int : 1,
-                'nutrition':
-                    m['nutrition'] as Map<String, dynamic>? ??
-                    NutritionalUtils.generateMockNutrition(cat),
+                'nutrition': m['nutrition'] as Map<String, dynamic>? ??
+                  const {
+                    'calories': 0.0,
+                    'totalFat': 0.0,
+                    'saturatedFat': 0.0,
+                    'transFat': 0.0,
+                    'sodium': 0.0,
+                    'sugar': 0.0,
+                    'addedSugar': 0.0,
+                    'protein': 0.0,
+                    'fiber': 0.0,
+                  },
               };
             }),
           );
+
+        // Check if we need a monthly reset
+        final lastUpdate = data['updatedAt'] as Timestamp?;
+        if (_isNewMonth(lastUpdate)) {
+          print("📅 New month detected! Resetting balances...");
+          _resetMonthlyUsage();
+        }
+
       }
     } finally {
       _balancesLoaded = true;
@@ -298,6 +336,7 @@ class AppState extends ChangeNotifier {
   /// - [upc]: Universal Product Code
   /// - [name]: Display name for the product
   /// - [category]: Raw category string (will be canonicalized)
+  /// - [nutrition]: Nutrition data (map of maps)
   ///
   /// Returns true if a new line was created, false if only quantity increased.
   ///
@@ -336,8 +375,18 @@ class AppState extends ChangeNotifier {
     }
 
     // Generate nutritional data if not provided
-    final nutritionData =
-        nutrition ?? NutritionalUtils.generateMockNutrition(cat);
+    final nutritionData = nutrition ??
+    const {
+        'calories': 0.0,
+        'totalFat': 0.0,
+        'saturatedFat': 0.0,
+        'transFat': 0.0,
+        'sodium': 0.0,
+        'sugar': 0.0,
+        'addedSugar': 0.0,
+        'protein': 0.0,
+        'fiber': 0.0,
+    };
 
     basket.add({
       'upc': upc,
@@ -355,6 +404,21 @@ class AppState extends ChangeNotifier {
     return true;
   }
 
+  // bool addItemFromProduct(Map<String, dynamic> product) {
+  //   final nutrition =
+  //       NutritionalUtils.buildNutritionFromFoodNutrients(product);
+  //   return addItem(
+  //     upc: product['upc'] ?? '',
+  //     name: product['name'] ?? 'Unknown',
+  //     category: product['category'] ?? 'Unknown',
+  //     nutrition: nutrition,
+  //   );
+  // }
+
+  /// Increases the quantity of an existing basket item by 1.
+  ///
+  /// Searches [basket] for an item with matching [upc], increments its
+  /// `'qty'` field, and updates the category's used count in [balances].
   /// Increases the quantity of a product.
   ///
   /// 1. Tries to fill the original WIC category first.
@@ -488,4 +552,33 @@ class AppState extends ChangeNotifier {
     _persist();
     notifyListeners();
   }
+
+  Future<void> checkout() async {
+    if (_uid == null) return;
+
+    basket.clear();
+
+    await _persist();
+    notifyListeners();
+  }
+
+  void clearBasket() {
+    if (_uid == null) return;
+
+    for (final item in basket) {
+      final cat = _canon(item['category'] as String);
+      final qty = item['qty'] as int;
+
+      if (balances.containsKey(cat)) {
+        final currentUsed = (balances[cat]!['used'] ?? 0) as int;
+        balances[cat]!['used'] = (currentUsed - qty).clamp(0, 999);
+      }
+    }
+
+    basket.clear();
+
+    _persist();
+    notifyListeners();
+  }
+
 }
