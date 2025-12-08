@@ -500,7 +500,7 @@ void main() {
       // Healthier substitutes: one item
       when(
         mockAplService.healthierSubstitutes(
-          category: any(named: 'category'),
+          category: 'Snacks',
           baseProduct: product,
           max: 5,
         ),
