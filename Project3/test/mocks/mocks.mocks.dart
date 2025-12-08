@@ -2197,12 +2197,14 @@ class MockAppState extends _i1.Mock implements _i19.AppState {
     required String? upc,
     required String? name,
     required String? category,
+    Map<String, dynamic>? nutrition,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#addItem, [], {
               #upc: upc,
               #name: name,
               #category: category,
+              #nutrition: nutrition,
             }),
             returnValue: false,
           )

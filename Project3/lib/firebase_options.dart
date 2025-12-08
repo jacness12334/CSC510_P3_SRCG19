@@ -85,14 +85,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'se25fall-g1-proj3.firebasestorage.app',
     iosBundleId: 'com.example.wolfbite',
   );
-
 }
-
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-
-// ...
-
-await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-);
