@@ -9,6 +9,7 @@ import 'package:wolfbite/screens/signup_page.dart';
 import 'screens/scan_screen.dart';
 import 'screens/basket_screen.dart';
 import 'screens/balances_screen.dart';
+import 'screens/receipt_scanner_screen.dart';
 
 /// Listenable wrapper for Firebase auth state changes.
 ///
@@ -129,6 +130,12 @@ final GoRouter router = GoRouter(
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: BalancesScreen()),
         ),
+
+        GoRoute(
+          path: '/receipt',
+          pageBuilder:  (context, state) =>
+              const NoTransitionPage(child: ReceiptScannerScreen()),
+        )
       ],
     ),
   ],

@@ -9,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import 'package:wolfbite/utils/nutritional_utils.dart';
 import '../state/app_state.dart';
 import '../services/apl_service.dart';
-import 'dart:async'; // Add this at the top
 
 class ReceiptScannerScreen extends StatefulWidget {
   const ReceiptScannerScreen({super.key});
@@ -87,14 +86,13 @@ class _ReceiptScannerScreenState extends State<ReceiptScannerScreen> {
   }
 
   /// Sends the image to the free OCR.space API
-Future<String> _fetchOcrText(String base64Image) async {
-  // Use the public 'helloworld' key (limits: 25kb max size sometimes, mostly for testing).
-  // For a smoother demo, get a free key at https://ocr.space/ocrapi/freekey
-  const apiKey = 'helloworld'; 
+  Future<String> _fetchOcrText(String base64Image) async {
+    // Use the public 'helloworld' key (limits: 25kb max size sometimes, mostly for testing).
+    // For a smoother demo, get a free key at https://ocr.space/ocrapi/freekey
+    const apiKey = 'helloworld'; 
 
-  final uri = Uri.parse('https://api.ocr.space/parse/image');
-
-  try {
+    final uri = Uri.parse('https://api.ocr.space/parse/image');
+    
     final response = await http.post(
       uri,
       body: {
@@ -102,70 +100,71 @@ Future<String> _fetchOcrText(String base64Image) async {
         'base64Image': base64Image,
         'language': 'eng',
         'isOverlayRequired': 'false',
-        'detectOrientation': 'true', // Added for better accuracy
-        'scale': 'true',            // Added for better accuracy
       },
-    ).timeout(const Duration(seconds: 15)); // <-- STOP WAITING AFTER 15 SECONDS
+    );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-
+      
       // Check for API errors
       if (data['IsErroredOnProcessing'] == true) {
         throw Exception(data['ErrorMessage']?[0] ?? "API Processing Error");
       }
-
+      
       final parsedResults = data['ParsedResults'] as List?;
       if (parsedResults != null && parsedResults.isNotEmpty) {
         return parsedResults[0]['ParsedText'] as String;
       }
       return "";
     } else {
-      // 403 usually means the 'helloworld' key is banned/throttled
-      if (response.statusCode == 403) {
-        throw Exception("API Limit Reached. Try a new API Key.");
-      }
       throw Exception("API Error: ${response.statusCode}");
     }
-  } on TimeoutException catch (_) {
-    throw Exception("Connection timed out. Check internet or API status.");
   }
-}
 
-  /// Find 12-digit numbers and lookup in APL
+  /// Find 12–14 digit codes and lookup in APL
   Future<void> _parseUPCs(String fullText) async {
-    print("🔎 Scanned Text:\n$fullText"); // Debug log
 
-    // Regex for 12-digit UPCs
-    final regex = RegExp(r'\b\d{12}\b');
+    final regex = RegExp(r'\b\d{12,14}\b');
     final matches = regex.allMatches(fullText);
 
     List<Map<String, dynamic>> validItems = [];
     int foundCount = 0;
 
     for (final match in matches) {
-      final upc = match.group(0)!;
+      String candidate = match.group(0)!;
       foundCount++;
-      
-    final info = await _apl.findByUpc(upc);
-    if (info != null) {
-    final productWithUpc = Map<String, dynamic>.from(info);
-    productWithUpc['upc'] = upc; 
 
-    if (!validItems.any((item) => item['upc'] == upc)) {
-        validItems.add(productWithUpc);
+      List<String> toTry = [candidate];
+      if (candidate.length > 12) {
+        for (int i = 0; i <= candidate.length - 12; i++) {
+          final sub = candidate.substring(i, i + 12);
+          if (!toTry.contains(sub)) toTry.add(sub);
+        }
+      }
+
+      for (final upc in toTry) {
+        final info = await _apl.findByUpc(upc);
+        if (info != null) {
+          final productWithUpc = Map<String, dynamic>.from(info);
+          productWithUpc['upc'] = upc;
+
+          if (!validItems.any((item) => item['upc'] == upc)) {
+            validItems.add(productWithUpc);
+          }
+          break; 
+        }
+      }
     }
-    }    
-}
 
     setState(() {
       _foundItems = validItems;
       _scanning = false;
-      _status = matches.isEmpty 
-          ? "No UPCs found.\n(Ensure image is clear & contains 12-digit codes)" 
+      _status = matches.isEmpty
+          ? "No UPC candidates found.\n(Ensure image is clear & contains 12–14 digit codes)"
           : "Found $foundCount codes, ${validItems.length} valid WIC items.";
     });
   }
+
 
   void _addAllToBasket() {
     final app = context.read<AppState>();
@@ -185,7 +184,10 @@ Future<String> _fetchOcrText(String base64Image) async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan Receipt (Web)')),
+      appBar: AppBar(
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () { context.go('/scan'); }, ), 
+        title: const Text('Scan Receipt (Web)')
+      ),
       body: Column(
         children: [
           Container(

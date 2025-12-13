@@ -449,9 +449,10 @@ class _ScanScreenState extends State<ScanScreen> {
               if (!context.mounted) return;
 
               // 2. Go to the receipt screen
-              await Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ReceiptScannerScreen()),
-              );
+              // await Navigator.of(context).push(
+              //   MaterialPageRoute(builder: (_) => const ReceiptScannerScreen()),
+              // );
+              context.go('/receipt');
 
               // 3. Restart the barcode scanner when we come back
               _scannerController.start();
