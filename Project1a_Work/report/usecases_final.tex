@@ -1,0 +1,183 @@
+% Final reconciled D2 content. Keep synchronized with
+% Project1a_Work/use_cases/usecases_final.md.
+\newcommand{\ucfield}[2]{\noindent\textbf{#1:} #2\par}
+
+\subsection{UC1: Create account}
+\ucfield{Primary actor}{New shopper}
+\ucfield{Stakeholders and interests}{Shopper: obtain a usable account and retain profile information. Service owner: maintain valid, attributable accounts.}
+\ucfield{Preconditions}{Shopper is signed out and account services are available.}
+\ucfield{Trigger}{Shopper chooses to create an account.}
+\ucfield{Main success scenario}{1. Shopper provides the required account and profile information. 2. System validates the information. 3. System creates the shopper's account. 4. System saves the shopper's profile. 5. System ends the initial session and makes sign-in available.}
+\ucfield{Extensions}{2a. Required information is blank or invalid: system identifies the invalid entry and does not submit. 3a. Account creation is rejected: system reports the failure and keeps account creation available. 4a. Account creation succeeds but profile saving fails: the account and profile are left incomplete, with no reliable recovery in this flow.}
+\ucfield{Postconditions}{The account and profile exist, and the shopper can sign in.}
+
+\subsection{UC2: Sign in}
+\ucfield{Primary actor}{Returning shopper}
+\ucfield{Stakeholders and interests}{Shopper: gain secure access to saved shopping information. Service owner: reject invalid credentials and protect account data.}
+\ucfield{Preconditions}{Shopper is signed out and has an account.}
+\ucfield{Trigger}{Shopper chooses to sign in.}
+\ucfield{Main success scenario}{1. Shopper provides account credentials. 2. System validates the credentials. 3. System authenticates the shopper. 4. System makes protected shopping features available.}
+\ucfield{Extensions}{2a. Email format is invalid: system reports the invalid entry without authenticating. 2b. Password is shorter than six characters: system reports the minimum length. 3a. Authentication is rejected or unavailable: system reports the failure and leaves the shopper signed out. 3b. A sign-in request is active: system prevents another submission until it finishes.}
+\ucfield{Postconditions}{Shopper is authenticated and can access protected shopping features.}
+
+\subsection{UC3: Sign out}
+\ucfield{Primary actor}{Authenticated shopper}
+\ucfield{Stakeholders and interests}{Shopper: prevent later device users from accessing the account. Service owner: remove account-specific information from the active session.}
+\ucfield{Preconditions}{Shopper is signed in.}
+\ucfield{Trigger}{Shopper chooses to sign out.}
+\ucfield{Main success scenario}{1. Shopper requests sign-out. 2. System ends the authenticated session. 3. System removes account-specific shopping information from the current session. 4. System makes sign-in available.}
+\ucfield{Extensions}{2a. Sign-out fails: shopper remains signed in and receives no explicit explanation. 4a. Signed-out state is detected before the normal transition finishes: system still returns the shopper to sign-in.}
+\ucfield{Postconditions}{No shopper is authenticated locally, and protected features require sign-in.}
+
+\subsection{UC4: Resume shopping session}
+\ucfield{Primary actor}{Returning shopper}
+\ucfield{Stakeholders and interests}{Shopper: recover the correct basket and benefit usage. Service owner: keep each shopper's information isolated.}
+\ucfield{Preconditions}{Shopper has authenticated and has an account identifier.}
+\ucfield{Trigger}{System detects the signed-in shopper.}
+\ucfield{Main success scenario}{1. System identifies the shopper. 2. System retrieves saved shopping information. 3. System restores the basket, quantities, product information, and benefit usage. 4. System confirms the activity belongs to the current benefit month. 5. System makes the restored session available.}
+\ucfield{Extensions}{2a. No saved information exists: system begins an empty session. 2b. Retrieval fails: loading finishes without user-facing recovery. 3a. Saved basket or benefit information is missing: available information is restored and empty values replace the rest. 3b. Saved nutrition is absent: zero-valued nutrition is substituted. 4a. Activity is from an earlier month or year: basket and used benefits reset. 4b. Saving the reset fails: the visible reset may not be preserved.}
+\ucfield{Postconditions}{The shopper's current-month saved session, or a new empty session, is available.}
+
+\subsection{UC5: Identify product}
+\ucfield{Primary actor}{Shopper}
+\ucfield{Stakeholders and interests}{Shopper: identify a product without relying on unsupported claims. Product-data owner: receive the intended code.}
+\ucfield{Preconditions}{Shopper is signed in and product lookup is available.}
+\ucfield{Trigger}{Shopper provides a product code by barcode capture or manual entry.}
+\ucfield{Main success scenario}{1. Shopper provides a product code. 2. System searches for a matching product record. 3. System identifies the product. 4. System presents its category, code, and nutrition summary. 5. System makes healthier alternatives available.}
+\ucfield{Extensions}{1a. Barcode capture is cancelled or unreadable: system remains ready. 1b. Manual entry is empty: no lookup occurs and no explanation is given. 2a. Another lookup is active: the new request is ignored. 2b. No record matches: system reports not found and clears the current result. 2c. Lookup fails: system reports the failure. 3a. Record is ineligible or lacks eligibility: system still presents it because direct lookup does not enforce eligibility.}
+\ucfield{Postconditions}{A matching product is available for review, and the basket is unchanged.}
+
+\subsection{UC6: Review product nutrition}
+\ucfield{Primary actor}{Health-conscious shopper}
+\ucfield{Stakeholders and interests}{Shopper: understand the product's nutritional qualities. Nutrition-data owner: have available values interpreted consistently.}
+\ucfield{Preconditions}{A product has been identified.}
+\ucfield{Trigger}{Shopper reviews the identified product.}
+\ucfield{Main success scenario}{1. System evaluates available nutrition information. 2. System presents up to three applicable nutritional qualities. 3. Shopper reviews the summary.}
+\ucfield{Extensions}{1a. Nutrient is missing or nonnumeric: zero is substituted. 1b. Value equals a threshold: the applicable quality is included. 1c. Missing values become zero: misleading low or heart-healthy qualities may appear. 2a. No rule matches: no quality label appears. 2b. More than three rules match: only the first three appear.}
+\ucfield{Postconditions}{Shopper has reviewed the nutrition summary; product and basket are unchanged.}
+
+\subsection{UC7: Compare healthier alternatives}
+\ucfield{Primary actor}{Health-conscious shopper}
+\ucfield{Stakeholders and interests}{Shopper: find a healthier eligible option in the same category. Product-data owner: have candidates compared consistently.}
+\ucfield{Preconditions}{An identified product has a nonempty category.}
+\ucfield{Trigger}{Shopper requests healthier alternatives.}
+\ucfield{Main success scenario}{1. System compares eligible same-category products. 2. System identifies products with a better nutrition assessment. 3. System ranks them. 4. System presents up to five alternatives. 5. Shopper reviews the comparison.}
+\ucfield{Extensions}{1a. Category is blank: system does not search. 1b. Search fails: system reports failure. 2a. Candidate nutrition is missing: zero values may make it appear healthier. 2b. Candidate is the original product: system excludes it. 2c. No candidate is better: system reports no healthier alternative. 4a. More than fifty candidates exist: alternatives come only from the first fifty retrieved.}
+\ucfield{Postconditions}{Shopper has reviewed up to five alternatives; basket is unchanged.}
+
+\subsection{UC8: Add product to basket}
+\ucfield{Primary actor}{WIC shopper}
+\ucfield{Stakeholders and interests}{Shopper: add an identified product. Benefit program: keep covered usage within the category allowance.}
+\ucfield{Preconditions}{Shopper is signed in and a product has been identified.}
+\ucfield{Trigger}{Shopper chooses to add the identified product.}
+\ucfield{Main success scenario}{1. System confirms the product is within allowance. 2. System adds one unit. 3. System increases used benefits. 4. System saves and confirms the addition.}
+\ucfield{Extensions}{1a. Allowance is exhausted: covered addition is disabled and a warning appears. 2a. Product already exists: quantity-increase flow is used. 2b. Shopper is no longer authenticated: addition is rejected. 4a. Saving fails: the session may show an addition that was not preserved.}
+\ucfield{Postconditions}{One covered unit is represented in the basket and category usage increased by one.}
+
+\subsection{UC9: Choose healthier alternative}
+\ucfield{Primary actor}{Health-conscious shopper}
+\ucfield{Stakeholders and interests}{Shopper: choose a healthier product without another lookup. Benefit program: apply category allowances.}
+\ucfield{Preconditions}{Healthier alternatives are available and shopper is signed in.}
+\ucfield{Trigger}{Shopper selects a healthier alternative.}
+\ucfield{Main success scenario}{1. Shopper chooses an alternative. 2. System confirms allowance. 3. System adds the alternative. 4. System updates benefit usage. 5. System saves and confirms it.}
+\ucfield{Extensions}{2a. Allowance is exhausted: system may reject the addition but still report success. 3a. Alternative already exists: its quantity increases. 3b. Shopper is no longer authenticated: addition is rejected but may be reported successful. 5a. Saving fails: visible and restored baskets may differ.}
+\ucfield{Postconditions}{On actual success, the selected alternative and benefit usage are saved in the basket.}
+
+\subsection{UC10: Scan receipt}
+\ucfield{Primary actor}{WIC shopper}
+\ucfield{Stakeholders and interests}{Shopper: identify receipt products with less manual entry. Receipt-reading provider: receive a supported image. Product-data owner: validate extracted codes.}
+\ucfield{Preconditions}{Shopper is signed in and required image, network, receipt-reading, and lookup services are available.}
+\ucfield{Trigger}{Shopper chooses to scan a receipt.}
+\ucfield{Main success scenario}{1. Shopper supplies a receipt image. 2. System reads it. 3. System identifies contiguous 12--14 digit candidates. 4. System checks for matching records. 5. System presents unique matches and a summary.}
+\ucfield{Extensions}{1a. Selection is cancelled: attempt ends. 2a. Reading fails: failure is reported. 3a. No candidate exists: system reports none. 3b. Code contains spaces or hyphens: it is missed. 4a. Candidate has 13/14 digits: each 12-digit window is checked. 4b. None match: zero matches are reported. 5a. Code repeats: product appears once although recognition count includes repeats.}
+\ucfield{Postconditions}{Zero or more unique matching products are available; basket is unchanged.}
+
+\subsection{UC11: Add receipt products}
+\ucfield{Primary actor}{WIC shopper}
+\ucfield{Stakeholders and interests}{Shopper: transfer recognized products into the basket. Benefit program: apply category allowances.}
+\ucfield{Preconditions}{Receipt scanning found a matching product and shopper is signed in.}
+\ucfield{Trigger}{Shopper chooses to add recognized products.}
+\ucfield{Main success scenario}{1. System evaluates each product against allowances. 2. System adds accepted products. 3. System updates benefit usage. 4. System reports additions. 5. System presents the basket.}
+\ucfield{Extensions}{1a. Nutrition is absent: zero values are substituted. 2a. Product already exists: quantity increases but reported count omits it. 2b. Category is full: product is rejected rather than made shopper-paid. 5a. Saving fails: locally updated contents may not be preserved.}
+\ucfield{Postconditions}{Every accepted product is represented in the basket and its category usage is updated.}
+
+\subsection{UC12: Review basket}
+\ucfield{Primary actor}{Shopper}
+\ucfield{Stakeholders and interests}{Shopper: verify products and quantities. Benefit program: distinguish covered and shopper-paid quantities.}
+\ucfield{Preconditions}{Shopper is signed in.}
+\ucfield{Trigger}{Shopper requests the basket.}
+\ucfield{Main success scenario}{1. System presents each product, quantity, category, and nutrition summary. 2. System presents total quantity. 3. Shopper reviews the basket.}
+\ucfield{Extensions}{1a. Basket is empty: system explains and offers product identification. 1b. Nutrition is absent: zero values appear. 1c. Product has covered and paid quantities: they appear separately.}
+\ucfield{Postconditions}{Shopper has reviewed the basket; quantities and benefit usage are unchanged.}
+
+\subsection{UC13: Review basket-product nutrition}
+\ucfield{Primary actor}{Health-conscious shopper}
+\ucfield{Stakeholders and interests}{Shopper: inspect detailed nutrition facts. Nutrition-data owner: preserve available values.}
+\ucfield{Preconditions}{Basket contains the product.}
+\ucfield{Trigger}{Shopper requests detailed nutrition for a basket product.}
+\ucfield{Main success scenario}{1. Shopper selects a product. 2. System presents calories, fats, sodium, sugars, and protein. 3. Shopper reviews them. 4. Shopper returns to the basket summary.}
+\ucfield{Extensions}{2a. Nutrition is absent: zero defaults appear. 2b. One value is absent: system displays \texttt{null} instead of unknown. 4a. Shopper does not return: details remain visible while the view is retained.}
+\ucfield{Postconditions}{Shopper has inspected nutrition; basket is unchanged.}
+
+\subsection{UC14: Increase product quantity}
+\ucfield{Primary actor}{WIC shopper}
+\ucfield{Stakeholders and interests}{Shopper: add another unit. Benefit program: keep covered quantity within allowance.}
+\ucfield{Preconditions}{Basket contains the selected covered product.}
+\ucfield{Trigger}{Shopper requests another unit.}
+\ucfield{Main success scenario}{1. System confirms another covered unit is available. 2. System increases quantity. 3. System increases used benefits. 4. System saves and presents the basket.}
+\ucfield{Extensions}{1a. Allowance is exhausted: continue with UC15. 2a. Matching product is absent: no quantity changes although an update is processed. 4a. Saving fails: displayed and restored quantities may differ.}
+\ucfield{Postconditions}{Covered quantity and used benefits increased by one.}
+
+\subsection{UC15: Add shopper-paid quantity}
+\ucfield{Primary actor}{Shopper}
+\ucfield{Stakeholders and interests}{Shopper: obtain another unit after coverage is exhausted. Benefit program: exclude it from covered usage. Retailer: distinguish shopper-paid quantity.}
+\ucfield{Preconditions}{Basket contains the covered product and its allowance is exhausted.}
+\ucfield{Trigger}{Shopper requests another unit.}
+\ucfield{Main success scenario}{1. System identifies the unit as shopper-paid. 2. System adds it. 3. System leaves covered usage unchanged. 4. System saves and presents both quantities.}
+\ucfield{Extensions}{1a. Shopper adds a different newly identified product at the cap: addition is disabled rather than made paid. 2a. Paid quantity exists: it increases. 2b. Original covered product is absent: nothing is added. 4a. Benefits are reviewed: paid appears as unlimited although not a benefit. 4b. Saving fails: displayed and restored quantities may differ.}
+\ucfield{Postconditions}{One shopper-paid unit is added and covered usage is unchanged.}
+
+\subsection{UC16: Decrease product quantity}
+\ucfield{Primary actor}{Shopper}
+\ucfield{Stakeholders and interests}{Shopper: correct an over-selection. Benefit program: release usage only for a covered unit.}
+\ucfield{Preconditions}{Basket contains the product.}
+\ucfield{Trigger}{Shopper requests removal of one unit.}
+\ucfield{Main success scenario}{1. System identifies the applicable quantity. 2. System decreases it. 3. System adjusts usage for a covered unit. 4. System removes zero-quantity selection. 5. System saves and presents the basket.}
+\ucfield{Extensions}{1a. Covered and paid quantities exist: paid decreases first. 1b. No paid quantity exists: covered decreases. 1c. No match exists: no change. 3a. Usage is zero: it remains zero. 5a. Saving fails: displayed and restored quantities may differ.}
+\ucfield{Postconditions}{One matching unit is removed and usage is not negative.}
+
+\subsection{UC17: Clear basket}
+\ucfield{Primary actor}{Shopper}
+\ucfield{Stakeholders and interests}{Shopper: abandon all selections. Benefit program: release provisional usage.}
+\ucfield{Preconditions}{Basket is nonempty.}
+\ucfield{Trigger}{Shopper chooses to clear the basket.}
+\ucfield{Main success scenario}{1. System requests confirmation. 2. Shopper confirms. 3. System removes all selections. 4. System reverses provisional usage without making it negative. 5. System saves and presents the empty basket.}
+\ucfield{Extensions}{2a. Shopper cancels: nothing changes. 4a. Category is absent from balances: product is removed without a category change. 4b. Usage is less than removed quantity: result stays zero. 5a. Saving fails: current basket is empty but saved products may remain.}
+\ucfield{Postconditions}{Basket is empty and its provisional usage is reversed.}
+
+\subsection{UC18: Review benefit balances}
+\ucfield{Primary actor}{WIC shopper}
+\ucfield{Stakeholders and interests}{Shopper: know used, allowed, and remaining quantities. Benefit program: communicate limits accurately.}
+\ucfield{Preconditions}{Shopper is signed in and information has loaded.}
+\ucfield{Trigger}{Shopper requests benefit information.}
+\ucfield{Main success scenario}{1. System presents used and allowed quantities. 2. System distinguishes limited and unlimited categories. 3. System presents remaining capacity. 4. Shopper reviews balances.}
+\ucfield{Extensions}{1a. Information is loading: loading state appears. 1b. No categories exist: absence is reported. 2a. Paid exists: it appears unlimited although not a benefit. 3a. Usage reaches allowance: full progress appears. 3b. Allowance is zero: progress may be meaningless.}
+\ucfield{Postconditions}{Shopper has reviewed benefits; basket and balances are unchanged.}
+
+\subsection{UC19: Prepare checkout handoff}
+\ucfield{Primary actor}{Shopper}
+\ucfield{Stakeholders and interests}{Shopper: present selected products for checkout. Cashier: receive a scannable basket representation.}
+\ucfield{Preconditions}{Shopper is signed in and basket is nonempty.}
+\ucfield{Trigger}{Shopper declares the basket ready.}
+\ucfield{Main success scenario}{1. Shopper requests a handoff. 2. System prepares a scannable basket representation. 3. System presents it. 4. Shopper presents it to the cashier.}
+\ucfield{Extensions}{2a. Representation is unusable: no fallback exists. 4a. Cashier cannot consume it: no acknowledgement or interoperability check exists. 4b. Shopper leaves before finishing: basket and usage remain unchanged.}
+\ucfield{Postconditions}{Basket remains available and its handoff is presented; external acceptance is not guaranteed.}
+
+\subsection{UC20: Finish shopping session}
+\ucfield{Primary actor}{Shopper}
+\ucfield{Stakeholders and interests}{Shopper: finish checkout. Benefit program: retain consumed usage. Service owner: save the cleared basket consistently.}
+\ucfield{Preconditions}{Shopper is signed in and checkout handoff is displayed.}
+\ucfield{Trigger}{Shopper marks the transaction finished.}
+\ucfield{Main success scenario}{1. Shopper marks checkout finished. 2. System clears the basket. 3. System retains benefit usage. 4. System saves the cleared basket. 5. System confirms and returns to product identification.}
+\ucfield{Extensions}{1a. Shopper finishes without cashier confirmation: system proceeds. 4a. Saving fails: current basket remains cleared, no rollback occurs, and completion is not confirmed.}
+\ucfield{Postconditions}{Basket is empty in saved state and benefit usage represents purchased quantities.}

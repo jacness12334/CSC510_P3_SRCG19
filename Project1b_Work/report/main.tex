@@ -1,0 +1,735 @@
+\documentclass[sigconf]{acmart}
+
+% CSC 510 course report rather than an ACM publication.
+\setcopyright{none}
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagestyle{plain}
+\raggedbottom
+
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{placeins}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\setlength{\emergencystretch}{1.5em}
+
+\title{Project 1b}
+\acmConference[CSC 510]{CSC 510: Software Engineering}{September 2026}{Raleigh, NC}
+\acmYear{2026}
+
+\author{Abigail Close}
+\affiliation{%
+  \institution{North Carolina State University}
+  \city{Raleigh}
+  \state{North Carolina}
+  \country{USA}}
+\email{aeclose2@ncsu.edu}
+
+\author{Aditya Mahajan}
+\affiliation{%
+  \institution{North Carolina State University}
+  \city{Raleigh}
+  \state{North Carolina}
+  \country{USA}}
+\email{amahaja8@ncsu.edu}
+
+\author{Satwi Shah}
+\affiliation{%
+  \institution{North Carolina State University}
+  \city{Raleigh}
+  \state{North Carolina}
+  \country{USA}}
+\email{stshah2@ncsu.edu}
+
+\author{Supreme Constantine}
+\affiliation{%
+  \institution{North Carolina State University}
+  \city{Raleigh}
+  \state{North Carolina}
+  \country{USA}}
+\email{spconsta@ncsu.edu}
+
+\begin{document}
+
+\begin{abstract}
+WolfBite is an inherited Flutter/Firebase shopping assistant for WIC
+participants and caregivers. Project 1a established the system's existing
+behavior and limitations through traceable use cases and independent testing.
+In Project 1b, we combined analyses from multiple LLMs with verified competitor
+sources, participant evidence, Project 1a engineering results, feasibility
+review, and relevant regulations, standards, and licenses to assess the market,
+identify product opportunities, and consider whether to continue with WolfBite
+or pivot. The evidence indicates a medium-confidence opportunity to help
+shoppers respond when an item that appears eligible is rejected at checkout.
+The team chose to continue developing WolfBite. Project 2 will pursue the
+finalized one-month milestones: clearer nutrition explanations, bounded
+basket-wide suggestions, a more usable shopping interface, and rule-based help
+for simulated checkout-rejection scenarios, including a baseline comparison of
+the checkout-help workflow. This plan extends the inherited product while
+keeping uncertain eligibility and checkout information explicit.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+Project 1a established the ``Before'' baseline for the inherited WolfBite
+application through code-traceable use cases and automated testing. Project 1b
+used that baseline to determine whether the team should extend WolfBite or
+pivot. To support this decision, the team compared four LLM analyses with
+verified competitor sources, participant evidence, feasibility findings, and
+relevant technical and regulatory material. This work produced a market survey,
+a documented product gap, a mission and stakeholder analysis, scoped
+engineering milestones, and an assessment of both continuation and pivot
+options.
+
+The team decided to continue with WolfBite and selected the finalized ``Now''
+milestones as the Project 2 plan. These milestones cover evaluation of the
+checkout-help concept, clearer nutrition explanations, basket-wide suggestions,
+interface improvements, and bounded help for simulated item rejections. The
+following sections present the evidence and constraints behind that decision
+and define how the proposed version will improve on the Project 1a system.
+
+\section{D1: Market Survey}
+
+\subsection{Method}
+
+We ran the shared market-survey Prompt~1 with four LLM analysts: Codex,
+Terra, Gemini, and local Ollama, to generate rival candidates. We retained a
+rival only when at least two models named it or one model supplied a live,
+relevant URL. We then checked official product sources and independently
+audited the three strongest rivals. Each final rival independently satisfies
+the live-URL qualification rule through an official product source.
+
+\subsection{Verified Rivals}
+
+Table~\ref{tab:rivals} summarizes the three verified rivals.
+
+\begin{table*}[t]
+  \caption{D1 validated WIC rivals.}
+  \label{tab:rivals}
+  \centering
+  \small
+  \begin{tabular}{L{2.3cm}L{3.4cm}L{4.3cm}L{4.8cm}}
+    \toprule
+    Rival & Evidence it is real & What it does & Relevant limitation \\
+    \midrule
+    WICShopper &
+    Official App Store listing and vendor purchase-history documentation
+    \cite{wicshopper-appstore,wicshopper-redemption-history} &
+    Shows benefits, scans eligibility, provides food guidance, and records
+    item/category purchase history in supported agencies &
+    No documented workflow connects a scan/checkout mismatch to its likely
+    cause and recovery steps. \\
+    \addlinespace
+    myWIC Mosaic &
+    Official App Store listing \cite{mywic-mosaic-appstore} &
+    Shows benefits, tracks purchases, scans products, and supports shopping,
+    appointments, and certification &
+    No documented item-level explanation and recovery workflow for an
+    unexpectedly uncovered item. \\
+    \addlinespace
+    Bnft &
+    Official App Store listing \cite{bnft-appstore} &
+    Shows balances, scans benefit eligibility, manages cards, and provides
+    transaction history &
+    No documented item-level reconciliation or explanation for conflicting
+    scan and checkout results. \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\subsection{Selected Gap and Audience}
+
+\textbf{Gap:} Our feature audit found no documented integrated, item-level
+explanation-and-recovery workflow in WICShopper, myWIC Mosaic, or Bnft for
+cases where an app indicates that a product is eligible but checkout rejects
+it. Such a workflow could connect the rejected item, the participant's current
+benefit or food category, and purchase evidence to likely causes and
+actionable next steps.
+
+\textbf{Audience:} WIC caregivers and participants shopping for their
+households, especially those managing young children while an item they
+expected to be covered is rejected at checkout.
+
+This need is supported by participant research reporting difficulty
+identifying WIC-eligible foods and stigma during shopping and checkout
+\cite{fiedler2026,chauvenet2019}. WIC caregivers also rank balance checking and
+barcode scanning among their highest-priority app features \cite{weber2021}.
+Together, this evidence suggests that eligibility uncertainty during shopping
+remains consequential for the target audience.
+
+We also evaluated two alternative gaps. We rejected nutrition comparison
+because participant evidence for that need was comparatively weak. We rejected
+broader receipt reconciliation because all three rivals already provide some
+form of purchase or transaction history. The narrower explanation-and-recovery
+gap therefore has stronger support from both the competitor audit and
+participant evidence.
+
+\subsection{Counterevidence and Scope}
+
+The conclusion has \textbf{medium confidence}. WICShopper already provides
+item-level purchase history in some agencies, myWIC tracks purchases, and Bnft
+provides transaction history. Public documentation may also omit
+program-specific features. In one month, the team can build and test a
+WolfBite prototype using fixed mismatch scenarios, rule-based likely causes,
+and recovery guidance. Without state benefit-system data, the prototype must
+not claim to know an authoritative point-of-sale rejection reason.
+
+\section{D2: Mission, Impact, and Stakeholders}
+
+\subsection{Mission Statement}
+
+WIC participants and caregivers can face uncertainty when a product appears
+eligible in an app but is rejected at checkout, a setting in which participant
+research has documented difficulty identifying eligible foods and stigma
+during shopping and checkout \cite{fiedler2026,chauvenet2019}. That conflict
+can add confusion and friction during a household shopping trip. We propose
+extending WolfBite with an item-level explanation-and-recovery workflow that
+connects the rejected item's UPC and package details, the participant's current
+benefit or food category, and available eligibility or purchase evidence. For
+a bounded set of mocked mismatch scenarios, the workflow will distinguish app
+evidence from facts that only a retailer or WIC agency can confirm, then show
+rule-based likely causes and actionable next steps. This guidance is intended
+to help participants and caregivers choose a next action after an unexpected
+rejection while keeping uncertain information visible.
+
+\subsection{Measurable Claim and M0 Evaluation}
+
+\textbf{M0 measurable claim:} During Project 2 M0, we will test whether the
+explanation-and-recovery workflow produces a task-success rate of at least
+80\% and at least 20 percentage points higher than the baseline workflow. A
+trial succeeds when a test user selects the prepared scenario's reference next
+step within 60 seconds without facilitator help. The baseline is a control
+version of the current WolfBite flow that shows the pre-checkout eligibility
+result and a mocked checkout rejection but provides no explanation or recovery
+guidance. The new and baseline flows will use the same counterbalanced,
+synthetic mismatch scenarios, so the evaluation requires neither live WIC
+data nor retailer point-of-sale access. These values are project targets to be
+measured at M0, not achieved results.
+
+\subsection{Stakeholders}
+
+The four Prompt~5 outputs used different labels for related roles. To avoid
+inflating the list with synonyms, Table~\ref{tab:stakeholders} includes a
+stakeholder group when there is a direct equivalent between LLMs.
+
+\begin{table*}[t]
+  \caption{Overlapping Prompt 5 stakeholders and requirements consequences.}
+  \label{tab:stakeholders}
+  \centering
+  \small
+  \setlength{\defaultaddspace}{0.3em}
+  \begin{tabular}{L{3.0cm}L{5.0cm}L{7.0cm}}
+    \toprule
+    Stakeholder & Need or fear & Design response \\
+    \midrule
+    WIC participants, caregivers, and household representatives &
+    Misleading eligibility guidance, uncertainty after a rejection, or the
+    wrong household state &
+    Identify the active household context and show evidence limits, likely
+    causes, and a short recovery action for the selected item. \\
+    \addlinespace
+    Infants, children, and pregnant or postpartum benefit recipients &
+    Eligibility or nutrition guidance could be mistaken for advice about what
+    is healthy or appropriate &
+    Keep coverage guidance separate from health claims and represent missing
+    information as unknown rather than zero or safe. \\
+    \addlinespace
+    WIC clinic staff, program administrators, and agencies &
+    Extra support burden or a prototype mistaken for official WIC authority &
+    Show data source and freshness, and route unresolved cases to the
+    appropriate agency contact. \\
+    \addlinespace
+    Cashiers, authorized retailers, and store managers &
+    Checkout delay, disputes, or incorrect UPC and package information when
+    the app and register disagree &
+    Treat the register outcome as authoritative, provide concise recovery
+    guidance, and make no payment or point-of-sale integration claim. \\
+    \addlinespace
+    State WIC IT teams, EBT processors, and card-system vendors &
+    Unsupported integrations, security risks, or simulated balances presented
+    as official data &
+    Use mock adapters and simulated data, document the integration boundary,
+    and make no live balance or payment claim. \\
+    \addlinespace
+    Approved-product-list stewards, manufacturers, and product-data providers &
+    Stale, copied, misattributed, or misidentified UPC, package, and category
+    records &
+    Retain source/version provenance and test stale, duplicate, and conflicting
+    records before presenting a likely cause. \\
+    \addlinespace
+    Privacy, security, and legal reviewers &
+    Exposure of household, benefit, receipt, location, or diagnostic data and
+    liability from unsupported claims &
+    Minimize stored data, exclude card credentials, use privacy-safe logs, and
+    state the prototype's limits at decision points. \\
+    \addlinespace
+    Program regulators and compliance personnel &
+    Misrepresented eligibility, unnecessary data collection, or exclusion of
+    protected users &
+    Trace eligibility statements to their source and test explicit privacy,
+    accessibility, and nondiscrimination requirements. \\
+    \addlinespace
+    Participants with disabilities or limited English proficiency, and their
+    advocates &
+    Camera-only controls, color-only status, small targets, or unclear language
+    could block the recovery task &
+    Preserve manual entry, pair color and icons with text, use semantic labels
+    and plain language, and test text scaling and assistive navigation. \\
+    \addlinespace
+    Receipt OCR and other outside data-service providers &
+    Sensitive uploads, unsupported formats, or use outside service terms &
+    Keep OCR outside the core recovery path; if retained, require consent,
+    validate inputs, minimize retention, and provide a mock service. \\
+    \addlinespace
+    Application developers and maintainers &
+    Unreproducible failures, sensitive logs, or one-month scope growth &
+    Use a bounded rule set, deterministic fixtures, and privacy-safe
+    diagnostics. \\
+    \addlinespace
+    Project sponsors, funders, and procurement decision-makers &
+    Misleading public-benefit claims, hidden integration costs, or a prototype
+    that cannot be maintained &
+    Define a narrow pilot, measurable outcomes, and explicit external
+    dependencies rather than promising statewide deployment. \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+\FloatBarrier
+
+\section{D3: Engineering Plan}
+
+\subsection{Before: Project 1a}
+
+\begin{itemize}
+  \item \textbf{Set up and analyze the inherited WolfBite application.}
+  The team cloned, ran, and inspected the existing Flutter/Firebase project so
+  later decisions were based on implemented behavior rather than only the
+  product description.
+
+  \item \textbf{Map the documented behavior to the implementation.}
+  The team finalized 20 code-traceable use cases and connected their primary,
+  alternative, and exception paths to the relevant production code.
+
+  \item \textbf{Create and execute automated use-case tests.}
+  The team authored 86 tests spanning UC1--UC20. The recorded Project~1a run
+  produced 82 passes and four retained failures that became evidence for the
+  next version.
+
+  \item \textbf{Document traceability, failures, and coverage.}
+  The Project~1a report and supporting records preserve the test results,
+  failure classifications, use-case traceability, and the 77.5\%
+  executable-line coverage baseline.
+\end{itemize}
+
+\subsection{Now: One-Month Build and Test}
+
+Our one-month goal is to make WolfBite a more complete, usable shopping app.
+We will improve nutrition explanations, add an optional basket-wide suggestion
+mode, and make the main screens easier to use. A small checkout-help feature
+retains D2's explanation-and-recovery goal; the nutrition improvements support
+the shopping experience rather than establish a new verified market gap.
+Benefit information and checkout rejection scenarios will remain simulated.
+
+\begin{itemize}
+  \item \textbf{M0: Check whether checkout help is useful.}
+  Compare the current flow with the checkout-help feature using the same
+  prepared rejection scenarios. Keep D2's target: at least 80\% of trials
+  choose the reference next step within 60 seconds without facilitator help,
+  with success at least 20 percentage points above the baseline. Build a script
+  that scores trial logs and runs in CI; check it with known passing and failing
+  examples.
+  Synthetic logs test the script, not real usability. Report pilot results
+  separately if volunteers are available, and record a re-plan decision if
+  measured results miss the target.
+
+  \item \textbf{M1: Better nutrition information and food-choice explainers.}
+  Extend the existing nutrition panel and badges with units, serving or
+  reference amounts, and short explanations of the values behind a label or
+  comparison. Show available sodium, sugar, fiber, protein, and fat information,
+  including tradeoffs between options rather than a single unexplained
+  ``healthier'' score. Reuse the nutrition utility and product records, preserve
+  missing values as unknown, and retain the measurement basis in saved basket
+  items. Check educational wording against cited nutrition sources during
+  implementation. Unit and widget tests must verify displayed values and units,
+  explanation rules, comparable serving bases, and missing-data cases; unknown
+  values must never earn a favorable badge or comparison.
+
+  \item \textbf{M2: Basket-wide suggestions for more balanced food choices.}
+  Add an optional ``Basket balance'' mode alongside individual substitutions.
+  Use basket quantities and M1's nutrition data to summarize food-group variety
+  and rank possible swaps by their effect on the whole basket. Start with a
+  small mock catalog with known package amounts and food-group mappings, and
+  explicit demonstration targets for sodium, added sugar, and fiber. Prioritize
+  only comparisons with known, compatible units and package amounts; flag
+  incomplete totals and skip suggestions that depend on missing measurements.
+  Rank candidates against
+  the basket's largest target gap, rather than ranking each food in isolation;
+  show before/after values and any tradeoffs for up to three suggestions.
+  Reuse the APL category lookup, restrict swaps to the same benefit category
+  and compatible package size, and recheck simulated allowances before applying
+  one shopper-confirmed swap at a time. Recalculate after each change. Tests
+  must show that the same item can receive different suggestions in different
+  baskets, quantities affect results, and previews leave the basket unchanged.
+  Also test confirmed swaps, balance consistency, missing measurement data,
+  and no suitable candidate. This is a shopping aid with illustrative targets,
+  not a personalized diet plan or a claim that a basket represents daily intake.
+
+  \item \textbf{M3: A clearer, more complete shopping interface.}
+  Improve the existing scan, basket, and benefits screens with consistent
+  typography, spacing, product cards, and clearly labeled primary actions.
+  Make nutrition explanations and the two suggestion modes easy to find;
+  distinguish covered and shopper-paid items with text as well as color.
+  Add useful loading, empty, error, and retry states. Widget tests and a manual
+  walkthrough must cover scan-to-basket navigation, opening an explainer,
+  previewing a basket suggestion, and checking benefits. Verify phone and
+  desktop layouts, enlarged text, and screen-reader labels without clipped
+  content or inaccessible controls. Existing quantity and navigation tests
+  must continue to pass.
+
+  \item \textbf{M4: Add straightforward help for a rejected item.}
+  Add an action on a basket item that opens a short explanation and next step
+  for prepared package-size, category-balance, and stale-information scenarios.
+  Use simple rules over mock item and benefit records, with an ``unable to
+  determine'' response when evidence is missing. Test each explanation and
+  the full item-to-help flow, including returning to the basket without
+  changing its contents. Label the advice as possible causes, not an official
+  checkout decision; use this feature in M0's comparison.
+\end{itemize}
+
+Build the M0 script and M1's measurement handling and define M4's fixtures and
+flow in week 1. In weeks 2--3, implement the bounded basket suggestions while
+completing M4 and targeted M3 work. Reserve week 4 for integration and the
+evaluation. M4 and M0 are the critical path; if they slip, defer M2 extensions
+and nonessential M3 polish. Keep basket suggestions to one-swap previews over
+the mock catalog; multi-item optimization and personalized meal planning are
+outside this month. Add tests alongside each change, run relevant Project 1a
+regressions in CI, and document how another team can run the mock demo and
+extend the catalog, explanation rules, basket targets, and checkout-help cases.
+
+\subsection{Future: After the One-Month Project}
+
+\begin{itemize}
+  \item \textbf{Permissioned, versioned state APL synchronization.}
+  Replace the dated NC APL fixtures used in M4's rejection-recovery scenarios
+  with a monitored, permissioned adapter to the live state Authorized Product
+  List, recording jurisdiction, data version, refresh timestamp, and known
+  conflicts. This directly extends M4's rule-based likely-cause engine by
+  giving it real, dated evidence instead of mocked fixtures, but requires
+  state data-sharing permission and an operational update owner, which is
+  why it stays out of the one-month scope.
+
+  \item \textbf{Partner-backed read-only benefit and rejection-evidence
+  pilot.}
+  Pilot the M0/M4 checkout-help workflow using authorized participant benefit
+  and real transaction-rejection evidence from a willing WIC agency, EBT
+  processor, or retailer partner, without allowing WolfBite to approve
+  purchases, process payments, or modify benefit balances. This would let the
+  team validate whether M4's rule-based causes match real rejection reasons,
+  moving the prototype from synthetic scenarios toward evidence-backed
+  recovery guidance. It depends on securing a data-sharing agreement and a
+  confidentiality/security review with a program partner.
+
+  \item \textbf{Privacy-reviewed on-device receipt recognition and
+  reconciliation.}
+  Extend M4's item-level recovery flow with on-device receipt scanning,
+  reconciling actual purchased items and quantities against the basket and
+  benefit records without uploading a full receipt image to a third-party OCR
+  service. This responds to the receipt-privacy concern identified in the D2
+  stakeholder analysis for outside data-service providers, and requires
+  resolving device-support, receipt-format variability, and duplicate/quantity
+  matching that are out of scope for the one-month build.
+
+  \item \textbf{Spanish-language and broader accessibility validation.}
+  Add professionally reviewed Spanish-language content across the nutrition
+  explainers (M1), basket-balance suggestions (M2), redesigned interface (M3),
+  and rejection-recovery flow (M4), and validate all four against a wider
+  range of disability, literacy, language, device, and network conditions than
+  M3's baseline WCAG~2.2 Level AA pass. This extends the D2 stakeholder
+  finding that participants with disabilities or limited English proficiency
+  could be blocked by camera-only controls or unclear language, but requires
+  translation expertise and broader participant recruitment beyond the
+  one-month timeframe.
+
+  \item \textbf{Production hardening and operational release.}
+  Add the access-control testing, security review, monitoring,
+  backup/retention policies, and deployment-specific compliance work needed to
+  move WolfBite from a tested student prototype into a safely operable public
+  release, including resolving the dependency-licensing and lockfile gaps
+  identified in the Project~1a baseline audit. This milestone only becomes
+  relevant once M0's evaluation confirms the checkout-help workflow is worth
+  deploying beyond the course prototype.
+\end{itemize}
+
+\subsection{Support Material}
+
+Table~\ref{tab:support} separates material that governs the WIC program from
+technical and accessibility guidance that constrains this prototype and from
+licenses that govern redistribution.  The design consequences are requirements
+for the Project~2 explanation-and-recovery workflow, not claims that WolfBite
+is a WIC agency, retailer system, or EBT processor.
+
+\begin{table*}[t]
+  \caption{Support material and the Project~2 design checks it creates.}
+  \label{tab:support}
+  \centering
+  \footnotesize
+  \begin{tabular}{L{3.8cm}L{5.1cm}L{6.1cm}}
+    \toprule
+    Support material and source & What it says that matters here & Effect on WolfBite's design \\
+    \midrule
+    \textbf{Federal regulation: 7 CFR Part 246, especially
+    \S~246.10(b) and (e)(12).} USDA Food and Nutrition Service (FNS);
+    \href{https://www.ecfr.gov/current/title-7/subtitle-B/chapter-II/subchapter-A/part-246/section-246.10}{eCFR text} and
+    \href{https://www.fns.usda.gov/wic/food-packages/regulatory-requirements}{FNS regulatory summary}. &
+    The federal rule supplies minimum food and package criteria.  It also
+    permits a state agency to add criteria and requires the agency to identify
+    acceptable brands and package sizes.  FNS therefore cautions that a state
+    need not authorize every food that meets the federal requirements. &
+    An eligibility result must identify its jurisdiction, exact UPC/package,
+    source, and source date.  Meeting only federal criteria will be labeled as
+    general guidance, never as a guarantee of purchase.  The workflow will
+    distinguish that evidence from state authorization and from the retailer's
+    actual checkout result. \\
+    \addlinespace[0.2em]
+    \textbf{State domain guidance: North Carolina WIC Authorized Product List
+    (APL).} NC Department of Health and Human Services (NCDHHS);
+    \href{https://www.ncdhhs.gov/divisions/child-and-family-well-being/community-nutrition-services-section/wic/vendors/nc-wic-authorized-product-list-apl}{APL and UPC-submission page} and
+    \href{https://www.ncdhhs.gov/wic-vendor-manual-0}{WIC Vendor Manual}. &
+    NCDHHS maintains an APL by UPC; products can be added, changed, or removed,
+    and vendor systems must receive APL updates.  A product that appears to fit
+    a federal category is not thereby present in North Carolina's current APL. &
+    The bounded NC scenarios will use a dated APL fixture keyed by UPC and
+    package details.  A missing, changed, or stale APL record may be shown only
+    as a likely cause.  Recovery will link to the current NC list and agency
+    help or suggest checking an authorized alternative, rather than declaring
+    the item approved or diagnosing the register. \\
+    \addlinespace[0.2em]
+    \textbf{Technical/domain guidance: WIC EBT Technical Implementation Guide
+    and Operating Rules.} USDA FNS;
+    \href{https://www.fns.usda.gov/wic/ebt/technical-implementation-guide-operating-rules}{official resource page}. &
+    These resources standardize WIC EBT online purchase messages and file
+    handling for state agencies, authorized vendors, processors, and other EBT
+    stakeholders.  They describe the transaction ecosystem; they do not turn
+    a shopping assistant into an EBT system. &
+    Fixtures and explanations will keep agency, APL, benefit, and retailer
+    evidence separate.  Project~2 will use mock adapters and no card number,
+    PIN, live purchase message, or balance mutation.  It will say ``likely
+    cause'' when only the state or retailer transaction system could supply an
+    authoritative result. \\
+    \addlinespace[0.2em]
+    \textbf{Accessibility standard/design target: WCAG 2.2 Level AA.}
+    World Wide Web Consortium (W3C);
+    \href{https://www.w3.org/TR/WCAG22/}{WCAG 2.2} and
+    \href{https://www.w3.org/WAI/standards-guidelines/mobile/}{W3C mobile guidance}. &
+    Relevant success criteria prohibit color as the only means of conveying
+    information (1.4.1), set minimum contrast (1.4.3) and target-size/spacing
+    rules (2.5.8), require identified errors and known corrections
+    (3.3.1/3.3.3), and keep repeated help consistent (3.2.6).  W3C explains how
+    WCAG guidance can also inform native mobile applications. &
+    Approval, rejection, and uncertainty will use text plus an icon, not color
+    alone.  The flow will use semantic labels, readable contrast, scalable
+    text, adequately sized or spaced controls, a manual-UPC alternative to the
+    camera, a specific error and next action, and consistently placed agency
+    help.  Tests will cover text scaling and assistive navigation. \\
+    \addlinespace[0.2em]
+    \textbf{Application license: MIT License.} The inherited WolfBite
+    \texttt{Project3/LICENSE.md}; the same license is visible in the
+    \href{https://github.com/SuyeshJadhav/CSC510_G19/blob/main/Project2/LICENSE.md}{upstream repository}. &
+    MIT permits use, modification, and redistribution, provided the copyright
+    and permission notice remain in copies or substantial portions; it also
+    disclaims warranties. &
+    We will keep the inherited copyright and MIT text with redistributed
+    WolfBite code and will not describe the prototype as warranted or officially
+    approved. \\
+    \addlinespace[0.2em]
+    \textbf{Selected dependency licenses.} The declared packages are in
+    \texttt{Project3/pubspec.yaml}; official package records confirm
+    \href{https://pub.dev/packages/provider/license}{provider (MIT)},
+    \href{https://pub.dev/packages/mobile_scanner/license}{mobile\_scanner (BSD 3-Clause)}, and
+    \href{https://pub.dev/packages/firebase_core/license}{firebase\_core (BSD 3-Clause)}. &
+    MIT requires its copyright and permission notice.  BSD 3-Clause requires
+    its copyright, conditions, and disclaimer in source or binary distributions
+    as applicable and prohibits using contributor names for endorsement. &
+    Releases will preserve applicable third-party notices.  Before adding an
+    APL, accessibility, or scanning package, the team will record the resolved
+    version and license, check compatibility, and reject any dependency whose
+    redistribution duties the project cannot meet. \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\section{D5: LLM Analysis and Verification}
+
+\subsection{Models, Prompts, and Evidence}
+
+The four model/runner pairings were GPT-5.6 Sol through Codex desktop,
+collected by Abigail Close; GPT-5.6 Terra through ChatGPT, collected by Supreme
+Constantine; Gemini 3.1 Pro (High) through Antigravity, collected by Aditya
+Mahajan; and Llama 3 8B through local Ollama, run by Satwi Shah. Each model
+completed the required market-survey Prompt~1 and the three-part red-team
+Prompt~10. Keeper prompts are preserved in
+\path{Project1b_Work/prompts/keeper_prompts.md}, and raw transcripts are stored
+by model under \path{Project1b_Work/model_outputs/}. The Codex and Gemini P01
+records contain the exact keeper; Terra and local P01 preserve the similar
+earlier wording they received. The finalized Gemini and local P10 outputs are
+usable but less reproducible: Gemini's saved file omits the pasted prompt text,
+and the local transcript contains a prompt placeholder rather than the exact
+text.
+
+Prompt~1 generated candidates; it was not accepted as market proof. WICShopper
+appeared in all four outputs after name normalization, myWIC Mosaic in three,
+and Bnft in two. Live-source and scope checks produced the strongest direct set
+reported in D1: WICShopper, myWIC Mosaic, and Bnft. This comparison also exposed
+the value of multiple models: Terra emphasized state fragmentation, Gemini
+corroborated several direct products, Codex supplied the most complete live
+evidence, and the non-browsing local model produced mostly adjacent or
+unverified candidates that forced stricter checking.
+
+\subsection{Prompt-by-Model Comparison}
+
+\begin{table*}[t]
+  \caption{Cross-model Prompt~10 comparison and team adjudication.}
+  \label{tab:model-comparison}
+  \centering
+  \footnotesize
+  \begin{tabular}{L{2.1cm}L{4.1cm}L{4.4cm}L{4.5cm}}
+    \toprule
+    Model & Strongest useful attack & Evidence judgment & Team response and model limitation \\
+    \midrule
+    Codex &
+    Checkout friction does not prove demand for this exact workflow, and
+    M1--M3 may crowd out the M4-to-M0 critical path. &
+    Supported: direct demand and deployed-rival behavior remain unverified;
+    the dependency/scope risk is real. &
+    Treat WolfBite as an evaluation-first prototype and defer secondary scope
+    if needed. Codex could not directly observe users or deployed rivals. \\
+    \addlinespace
+    Terra &
+    Agencies, processors, retailers, and POS systems own the authoritative
+    evidence WolfBite lacks; the roadmap also exceeds the core mission. &
+    Supported as a structural constraint, although those institutions are not
+    direct software rivals. &
+    Keep claims non-authoritative, use fixed scenarios, and prioritize M4/M0.
+    Terra's competitor category was broader than D1's product definition. \\
+    \addlinespace
+    Gemini &
+    Five milestones are too much for roughly 160 hours, and WICShopper is
+    better positioned through program-connected data. &
+    The scope concern is supported; the absolute ``impossible'' verdict and
+    demand to abandon M1--M3 were not backed by measured estimates. &
+    Preserve the agreed milestones in bounded form with an explicit cut order
+    protecting M4/M0. \\
+    \addlinespace
+    Local Ollama &
+    Established rivals have more development, testing, and adoption, so
+    WolfBite needs a clear differentiator. &
+    Rival maturity is real, but its claim that mismatch recovery is an edge
+    case had no prevalence evidence; it missed the detailed scope conflict. &
+    Retain the medium-confidence gap and test usefulness at M0. The output was
+    generic and its saved prompt was incomplete. \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+All four models challenged market need, feasibility, and competitors, but they
+did not produce identical conclusions. Gemini called the plan indefensible
+unless M1--M3 were removed; Codex and Terra defended a bounded prototype with a
+cut order; Ollama did not recommend a pivot. The supported team conclusion is
+that P10 found no reason to abandon WolfBite. It did require an execution
+adjustment: M4 and M0 form the critical path, M1--M3 remain bounded supporting
+work, and secondary scope must yield if the core flow or evaluation slips. The
+main remaining risk is whether participants will use non-authoritative help at
+checkout; M0 tests that question rather than assuming the answer.
+
+\subsection{Wrong Outputs and How We Caught Them}
+
+The team checked candidate identity, URL relevance, product scope, and feature
+claims separately instead of accepting model prose as evidence. Concrete
+corrections included:
+
+\begin{itemize}
+  \item Gemini P01 returned seven products rather than ten, and its linked
+  listings did not establish its scanner, login, or reinstall-frequency claims.
+  We kept verified product identities but discarded those weaknesses.
+  \item Terra P01 supplied source labels instead of URL strings. Its
+  uncorroborated Indiana WIC, Wisconsin MyWIC, and SC WIC entries therefore
+  failed the team's evidence rule.
+  \item Live checks rejected local P01's FreshConnect, generic ``WIC Mobile
+  App,'' StoreWise, and Grocery IQ entries and reclassified several rebate/list
+  applications as adjacent. Product pages also failed to support its claimed
+  receipt scanning for Out of Milk and AnyList.
+  \item An initial team note incorrectly reported zero Terra/local overlap and
+  treated the local WICShopper URL as fabricated. Name normalization and the
+  live redirect showed the product was real, so WICShopper was credited to all
+  four models.
+  \item Gemini P10 called the full plan impossible without supplying an effort
+  breakdown, while local P10 called mismatches an edge case without prevalence
+  data. We retained both as risks to test, not verified findings; neither claim
+  overrode the inherited code evidence or the team's bounded scope decision.
+\end{itemize}
+
+These corrections prevented unsupported products and weaknesses from becoming
+requirements. They also narrowed the final D1 claim from broad nutrition or
+receipt novelty to a medium-confidence explanation-and-recovery gap.
+
+\subsection{Most and Least Useful Prompts}
+
+The most useful prompts were the custom focused-gap validation (P07) and the
+required red team (P10). P07 separated competitor absence from participant
+demand, rejected nutrition comparison and broad receipt reconciliation as the
+primary gaps, and produced the narrower medium-confidence gap. P10 independently
+exposed the demand, authority, and scope risks and led to the M4/M0 priority
+rule. P01 was essential but limited: it generated and corroborated rivals, yet
+every answer required source checking. The least useful for the final decision
+was P06's three-futures exercise. Its SAFE/BOLD/WILD concepts supported
+ideation, but speculative OCR and community directions supplied no market
+validation and did not determine the selected gap or build plan.
+
+\subsection{Model Strengths and Weaknesses}
+
+Across P01 and P10, the models contributed different strengths and failure
+modes:
+
+\begin{itemize}
+  \item \textbf{Codex} had the strongest source completeness and evidence-
+  boundary reasoning, but produced broad, verbose analyses still dependent on
+  external user and competitor validation.
+  \item \textbf{Terra} gave the strongest critique of roadmap alignment and
+  authoritative data, but its P01 evidence fields lacked URLs and its P10
+  competitor category extended beyond competing software.
+  \item \textbf{Gemini} gave the clearest, most forceful scope challenge, but
+  its P01 was incomplete and its P10 feasibility verdict was overconfident.
+  \item \textbf{Local Ollama} completed the attack structure locally and named
+  the verified rivals in P10, but its non-browsing P01 was factually weak and
+  its P10 was generic and incompletely preserved.
+\end{itemize}
+
+The disagreement improved the analysis without being manufactured: it exposed
+both factual verification failures and a real policy choice between removing
+M1--M3 and retaining them behind an M4/M0 scope gate.
+
+\section{Conclusion}
+
+Project 1b identified a medium-confidence opportunity to help WIC participants
+when an app marks an item as eligible but checkout rejects it. WICShopper, myWIC
+Mosaic, and Bnft cover much of the shopping process, but our review found no
+documented item-level explanation and recovery workflow.
+
+Using four LLMs helped us find and compare more competitors, while our own
+checks removed claims we could not verify. Prompt~10 did not give us a reason to
+change projects, but it warned that our plan may be too large for one month and
+that WolfBite cannot access official checkout data. Other milestone and
+feasibility prompts showed that the project should still be manageable if we
+use mock scenarios, set clear goals, and focus first on M4 and M0. In
+Project~2, we will follow this plan, cut lower-priority work if needed, keep our
+Project~1a tests working, and evaluate whether the checkout-help feature is
+actually useful.
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}
